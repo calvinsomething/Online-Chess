@@ -13,12 +13,16 @@
 				</div>
 			</div>
 			<div class="card-body">
-				<form>
+				<form method="POST" actions="">
+				{% csrf_token %}
 					<div class="input-group form-group">
 						<div class="input-group-prepend">
 							<span class="input-group-text"><i class="fas fa-user"></i></span>
 						</div>
 						{{form.username}}
+					</div>
+					<div style="color:#FFFFFF">
+							{{form.username.errors}}
 					</div>
 					<div class="input-group form-group">
 						<div class="input-group-prepend">
@@ -27,7 +31,8 @@
 						{{form.password}}
 					</div>
 					<div style="color:#FFFFFF">
-						{{form.errors}}
+						{{form.password.errors}}
+						{{form.non_field_errors}}
 					</div>
 					<div class="row align-items-center remember">
 						<input type="checkbox">Remember Me
