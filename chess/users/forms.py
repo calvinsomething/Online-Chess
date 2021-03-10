@@ -1,7 +1,7 @@
 from django import forms
-from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
+from .models import User
 
 class RegisterForm(UserCreationForm):
     class Meta:
@@ -12,7 +12,9 @@ class RegisterForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             if field == 'username': placeholder = 'Username'
-            if field == 'email': placeholder = 'Email'
+            if field == 'email':
+                placeholder = 'Email'
+                self.fields[field].required = True
             if field == 'password1': placeholder = 'Password'
             if field == 'password2': placeholder = 'Re-Enter Password'
             self.fields[field].widget.attrs.update({'class': 'form-control', 'placeholder': placeholder})
