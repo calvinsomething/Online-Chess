@@ -2,13 +2,25 @@
 
 @import url('https://fonts.googleapis.com/css?family=Numans');
 
+:root{
+    --clr: #9cb2be;
+}
+
 html,body{
 background-image: url('images/bg.webp');
 background-size: cover;
-background-position: center 77%;
+background-position: center 72%;
 background-repeat: no-repeat;
 height: 100%;
 font-family: 'Numans', sans-serif;
+}
+
+a{
+    color: var(--clr);
+}
+
+a:hover{
+    color:#ffffff;
 }
 
 .container{
@@ -17,17 +29,17 @@ align-content: center;
 }
 
 .card{
-height: 370px;
+height: 420px;
 margin-top: auto;
 margin-bottom: auto;
-width: 400px;
-background-color: rgba(0,0,0,0.5) !important;
+width: 420px;
+background-color: rgba(0,0,0, 0.7) !important;
 }
 
 .social_icon span{
 font-size: 60px;
 margin-left: 10px;
-color: #FFC312;
+color: var(--clr);
 }
 
 .social_icon span:hover{
@@ -47,7 +59,7 @@ top: -45px;
 
 .input-group-prepend span{
 width: 50px;
-background-color: #FFC312;
+background-color: var(--clr);
 color: black;
 border:0 !important;
 }
@@ -72,7 +84,7 @@ margin-right: 5px;
 
 .login_btn{
 color: black;
-background-color: #FFC312;
+background-color: var(--clr);
 width: 100px;
 }
 
