@@ -9,7 +9,7 @@
 html,body{
 background-image: url('images/bg.webp');
 background-size: cover;
-background-position: center 72%;
+background-position: center;
 background-repeat: no-repeat;
 height: 100%;
 font-family: 'Numans', sans-serif;
@@ -17,6 +17,12 @@ font-family: 'Numans', sans-serif;
 
 a{
     color: var(--clr);
+}
+
+.main-space{
+    border: 3px, solid, red;
+    background-color: rgba(0,0,0, 0.7);
+    color: white;
 }
 
 a:hover{
