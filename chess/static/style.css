@@ -6,6 +6,12 @@
     --clr: #9cb2be;
 }
 
+#board{
+    background-color: #432b5f;
+    width: 100%;
+    height: auto;
+}
+
 html,body{
 background-image: url('images/bg.webp');
 background-size: cover;
@@ -13,6 +19,7 @@ background-position: 20% bottom;
 background-repeat: no-repeat;
 height: 100%;
 font-family: 'Numans', sans-serif;
+background-attachment: fixed;
 }
 
 a{
