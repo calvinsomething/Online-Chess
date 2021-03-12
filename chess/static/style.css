@@ -6,11 +6,6 @@
     --clr: #9cb2be;
 }
 
-#board{
-    background-color: #432b5f;
-    width: 100%;
-    height: auto;
-}
 
 html,body{
 background-image: url('images/bg.webp');
@@ -116,3 +111,13 @@ color: white;
 .links a{
 margin-left: 4px;
 }
+
+.sq-w {
+    background: rgb(236, 236, 232);
+    padding-bottom: 100%;
+ }
+
+ .sq-b {
+    background: rgb(88, 128, 52);
+    padding-bottom: 100%;
+ }
