@@ -1,10 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-light">
   <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'home' %}">Online Chess</a>
+    <a class="navbar-brand pl-4" href="{% url 'home' %}">Online Chess</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -32,11 +31,15 @@
     </div>
   </div>
 </nav>
-<div class="w-25 p-6" style="background-color: #eee;">Width 25%</div>
-<div class="w-50 p-3" style="background-color: #eee;">Width 50%</div>
-<div class="w-75 p-3" style="background-color: #eee;">Width 75%</div>
-<div class="w-100 p-3" style="background-color: #eee;">Width 100%</div>
-<canvas class="container" style="background-color: rgb(45, 0, 104); height: 80%;">
-</canvas>
+<div class="row pt-5"></div>
+<div class="w-100 h-75 mt-2">
+  <div class="row h-100">
+    <div class="col-9 border border-danger">
+      <canvas class="ratio ratio-1x1" style="background-color: rgb(45, 0, 104);">
+      </canvas>
+    </div>
+    <div class="col-2 border border-primary">TEST</div>
+  </div>
+</div>
 
 {% endblock content %}
