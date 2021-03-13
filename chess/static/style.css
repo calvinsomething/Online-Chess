@@ -121,3 +121,7 @@ margin-left: 4px;
     background: rgb(88, 128, 52);
     padding-bottom: 100%;
  }
+
+ .s {
+     background-repeat: no-repeat;
+ }
