@@ -7,9 +7,10 @@
 
 */
 
-function setBoard(board) {
+function setBoard() {
+    takenFrom = undefined;
     for(let row = 0; row < 8; row++)
-        for(let col = 0; col < 8; col++)
+        for(let col = 0; col < 8; col++) {
             switch(row) {
                 case 0:
                     board[row][col] = 'B' + whiteStart[col];
@@ -23,26 +24,39 @@ function setBoard(board) {
                 case 6:
                     board[row][col] = 'WP';
             }
+            draw(document.getElementById(`${row},${col}`), board[row][col]);
+        }
     console.log("setting board");
-    draw();
 }
 
-function draw() {
-    for(let row = 0; row < 8; row++)
-        for(let col = 0; col < 8; col++)
-            if(board[row][col]) placePiece(document.getElementById(`${row},${col}`), board[row][col]);
+function draw(square, piece) {
+    if(piece !== '0') {
+        square.style.backgroundImage = `url(static/images/pieces/${piece}.png)`;
+        square.style.backgroundRepeat = "no-repeat";
+        square.style.backgroundPosition = "center";
+        square.style.backgroundSize = "cover";
+    }
+    else
+        square.style.backgroundImage = null;
 }
 
 function pickUpPiece(square) {
+    inHand = board[square.id[0]][square.id[2]];
+    takenFrom = square.id;
+    //change cursor icon in CSS
     console.log("Picked up piece from " + square.id);
 }
 
-function placePiece(square, piece) {
+function placePiece(square) {
     console.log("Placed piece on " + square.id);
-    square.style.backgroundImage = `url(static/images/pieces/${piece}.png)`;
-    square.style.backgroundRepeat = "no-repeat";
-    square.style.backgroundPosition = "center";
-    square.style.backgroundSize = "cover";
+    if(inHand !== '0') {
+        board[square.id[0]][square.id[2]] = inHand;
+        draw(square, inHand);
+    }
+    if(takenFrom) {
+        board[takenFrom[0]][takenFrom[2]] = '0';
+        draw(document.getElementById(takenFrom), '0');
+    }
 }
 
 function Square() {
@@ -58,8 +72,11 @@ for(let row = 0; row < 8; row++) {
     }
 }
 
+let takenFrom;
+let inHand;
+
 const whiteStart = [
     'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'
 ];
 
-document.onload = setBoard(board);
+document.onload = setBoard();
