@@ -115,13 +115,18 @@ margin-left: 4px;
 .sq-w {
     background: rgb(236, 236, 232);
     padding-bottom: 100%;
- }
+}
 
- .sq-b {
+.sq-b {
     background: rgb(88, 128, 52);
     padding-bottom: 100%;
- }
+}
 
- .s {
-     background-repeat: no-repeat;
- }
+.s {
+    background-repeat: no-repeat;
+}
+
+#board {
+    position: absolute;
+    cursor: default;
+}
