@@ -35,11 +35,12 @@ function draw(square, piece) {
 function pickUpPiece(square) {
     inHand = board[square.id[0]][square.id[2]];
     takenFrom = square.id;
+    draw(square, '0');
     var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
     if(inHand !== '0')
-        if(width > 1300)
+        if(width > 1200)
             document.getElementById("board").style.cursor = `url(static/images/pieces/${inHand}.png) 60 60, default`;
-        else if(width > 800)
+        else if(width > 992)
             document.getElementById("board").style.cursor = `url(static/images/pieces/Medium/${inHand}.png) 45 45, default`;
         else
             document.getElementById("board").style.cursor = `url(static/images/pieces/Small/${inHand}.png) 30 30, default`;
