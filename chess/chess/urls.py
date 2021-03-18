@@ -19,7 +19,9 @@ from .views import home, test
 
 urlpatterns = [
     path('', home, name="home"),
-    path("test/", test, name="test"),
+    path('<int:game_id>', home, name="game"),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
+    path('api/', include('api.urls')),
+    path('rest-auth/', include('rest_auth.urls'))
 ]

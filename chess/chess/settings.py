@@ -38,7 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
+    'api.apps.ApiConfig',
     'filters.apps.FiltersConfig',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_auth'
 ]
 
 MIDDLEWARE = [
@@ -130,3 +134,9 @@ AUTH_USER_MODEL = "users.User"
 LOGIN_REDIRECT_URL = "home"
 
 LOGIN_URL = "login"
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication'
+    ]
+}

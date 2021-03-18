@@ -1,3 +1,13 @@
+const newGameUrl = "http://127.0.0.1:8000/api/newgame"
+const boardUrl = "http://127.0.0.1:8000/api/gameboard"
+
+function getBoard() {
+    fetch(newGameUrl)
+    .then((rsp) => rsp.json())
+    .then(function(data){
+        console.log("Data:", data)
+    })
+}
 
 function setBoard() {
     takenFrom = undefined;
@@ -22,7 +32,7 @@ function setBoard() {
 }
 
 function draw(square, piece) {
-    if(piece !== '0') {
+    if(piece) {
         square.style.backgroundImage = `url(static/images/pieces/${piece}.png)`;
         square.style.backgroundRepeat = "no-repeat";
         square.style.backgroundPosition = "center";
@@ -33,11 +43,13 @@ function draw(square, piece) {
 }
 
 function pickUpPiece(square) {
-    inHand = board[square.id[0]][square.id[2]];
-    takenFrom = square.id;
-    draw(square, '0');
+    if(!inHand) {
+        inHand = board[square.id[0]][square.id[2]];
+        takenFrom = square.id;
+        draw(square, '');
+    }
     var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-    if(inHand !== '0')
+    if(inHand)
         if(width > 1200)
             document.getElementById("board").style.cursor = `url(static/images/pieces/${inHand}.png) 60 60, default`;
         else if(width > 992)
@@ -54,12 +66,13 @@ function placePiece(square) {
     // modify board
     // then modify display
     if(takenFrom) {
-        board[takenFrom[0]][takenFrom[2]] = '0';
-        draw(document.getElementById(takenFrom), '0');
+        board[takenFrom[0]][takenFrom[2]] = '';
+        draw(document.getElementById(takenFrom), '');
     }
-    if(inHand !== '0') {
+    if(inHand) {
         board[square.id[0]][square.id[2]] = inHand;
         draw(square, inHand);
+        inHand = '';
     }
     
     document.getElementById("board").style.cursor = "default";
@@ -83,7 +96,7 @@ let board = [];
 for(let row = 0; row < 8; row++) {
     board[row] = [];
     for(let col = 0; col < 8; col++) {
-        board[row][col] = '0';
+        board[row][col] = '';
     }
 }
 
@@ -95,3 +108,4 @@ const whiteStart = [
 ];
 
 document.onload = setBoard();
+getBoard();
