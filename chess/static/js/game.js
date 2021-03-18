@@ -1,8 +1,27 @@
-const newGameUrl = "http://127.0.0.1:8000/api/newgame"
-const boardUrl = "http://127.0.0.1:8000/api/gameboard"
+const newGameUrl = "http://127.0.0.1:8000/api/newgame/"
+const boardUrl = "http://127.0.0.1:8000/api/gameboard/"
+
+function newGame() {
+    fetch(newGameUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/jasn',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+      });
+
+}
+
+
 
 function getBoard() {
-    fetch(newGameUrl)
+    fetch(boardUrl, {credentials: 'include'})
     .then((rsp) => rsp.json())
     .then(function(data){
         console.log("Data:", data)
@@ -108,4 +127,5 @@ const whiteStart = [
 ];
 
 document.onload = setBoard();
-getBoard();
+newGame();
+//getBoard();

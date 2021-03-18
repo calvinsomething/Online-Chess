@@ -12,7 +12,6 @@ from .models import GameBoard
 # Create your views here.
 class Test(APIView):
 
-    permission_classes = (IsAuthenticated, )
     def get(self, request, *args, **kwargs):
         data = {
             'name': 'John',
@@ -22,12 +21,12 @@ class Test(APIView):
 
 
 class GameBoardView(generics.RetrieveUpdateAPIView):
-    permission_classes = (IsAuthenticated, )
+    #permission_classes = (IsAuthenticated, )
     serializer_class = GameBoardSerializer
     queryset = GameBoard.objects.all()
 
 
 class NewGameView(generics.CreateAPIView):
-    permission_classes = (IsAuthenticated, )
-    serializer_classes = GameBoardSerializer
-    queryset = GameBoard.objects.all()
+    #permission_classes = (IsAuthenticated, )
+    serializer_class = GameBoardSerializer
+    queryset = GameBoard.objects.none()

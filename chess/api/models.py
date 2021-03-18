@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from random import randint
 
 # Create your models here.
 
@@ -13,7 +14,11 @@ class SavedGame(models.Model):
         return self.title
 
 class GameBoard(models.Model):
-    whitesTurn = models.BooleanField()
+    def flipCoin():
+        return randint(0,1)
+
+
+    whitesTurn = models.BooleanField(default=flipCoin)
     board = models.CharField(max_length=64, default="\
         RNBQKBNR\
         PPPPPPPP\
