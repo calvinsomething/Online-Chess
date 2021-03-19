@@ -2,22 +2,14 @@ from django.db import models
 from django.utils import timezone
 from random import randint
 
-# Create your models here.
-
-class SavedGame(models.Model):
-    whiteUserId = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='whiteUserId')
-    blackUserId = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='blackUserId')
-    date_played = models.DateTimeField(default=timezone.now)
-    moves = models.TextField()
-
-    def __str__(self):
-        return self.title
 
 class GameBoard(models.Model):
     def flipCoin():
         return randint(0,1)
-
-
+    
+    whiteUserId = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='whiteUserId')
+    blackUserId = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='blackUserId')
+    timeStarted = models.DateTimeField(default=timezone.now)
     whitesTurn = models.BooleanField(default=flipCoin)
     board = models.CharField(max_length=64, default="\
         RNBQKBNR\
@@ -29,3 +21,4 @@ class GameBoard(models.Model):
         pppppppp\
         rnbqkbnr")
     
+    moves = models.TextField()

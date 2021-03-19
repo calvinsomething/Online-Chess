@@ -1,11 +1,28 @@
 const newGameUrl = "http://127.0.0.1:8000/api/newgame/"
 const boardUrl = "http://127.0.0.1:8000/api/gameboard/"
 
+document.getElementById("findGame").addEventListener('click', findGame);
+
+['sq-w', 'sq-b'].forEach(sq => {
+    for(element of document.getElementsByClassName(sq))
+        element.addEventListener('mousedown', pickUpPiece);
+    for(element of document.getElementsByClassName(sq))
+        element.addEventListener('mouseup', placePiece);
+});
+
+
+function findGame() {
+    var opponent = window.prompt("Enter opponent's username: ", "Username");
+    window.alert(opponent);
+}
+
 function newGame() {
     fetch(newGameUrl, {
         method: 'POST',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/jasn',
+            'X-CSRFToken': getCookie('csrftoken')
         }
     })
     .then(response => response.json())
@@ -15,10 +32,22 @@ function newGame() {
     .catch((error) => {
         console.error('Error:', error);
       });
-
 }
 
-
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 
 function getBoard() {
     fetch(boardUrl, {credentials: 'include'})
@@ -127,5 +156,5 @@ const whiteStart = [
 ];
 
 document.onload = setBoard();
-newGame();
+//newGame();
 //getBoard();

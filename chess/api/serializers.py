@@ -1,11 +1,7 @@
 from rest_framework import serializers
-from .models import SavedGame, GameBoard
+from .models import GameBoard
 
 
-class SavedGameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SavedGame
-        fields = '__all__'
 
 
 class GameBoardSerializer(serializers.ModelSerializer):
