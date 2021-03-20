@@ -1,19 +1,38 @@
 const newGameUrl = "http://127.0.0.1:8000/api/newgame/"
 const boardUrl = "http://127.0.0.1:8000/api/gameboard/"
+const token = getCookie('csrftoken');
 
 document.getElementById("findGame").addEventListener('click', findGame);
 
 ['sq-w', 'sq-b'].forEach(sq => {
-    for(element of document.getElementsByClassName(sq))
+    for(element of document.getElementsByClassName(sq)) {
         element.addEventListener('mousedown', pickUpPiece);
-    for(element of document.getElementsByClassName(sq))
         element.addEventListener('mouseup', placePiece);
+    }
 });
 
 
 function findGame() {
     var opponent = window.prompt("Enter opponent's username: ", "Username");
-    window.alert(opponent);
+    fetch("http://127.0.0.1:8000/api/findgame/", {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': token
+        },
+        body: JSON.stringify({
+            'user': 'me',
+            'opponent': opponent
+        })
+    },)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
 }
 
 function newGame() {
@@ -21,8 +40,8 @@ function newGame() {
         method: 'POST',
         credentials: 'include',
         headers: {
-            'Content-Type': 'application/jasn',
-            'X-CSRFToken': getCookie('csrftoken')
+            'Content-Type': 'application/json',
+            'X-CSRFToken': token
         }
     })
     .then(response => response.json())
@@ -90,7 +109,8 @@ function draw(square, piece) {
         square.style.backgroundImage = null;
 }
 
-function pickUpPiece(square) {
+function pickUpPiece(e) {
+    var square = e.target
     if(!inHand) {
         inHand = board[square.id[0]][square.id[2]];
         takenFrom = square.id;
@@ -108,7 +128,8 @@ function pickUpPiece(square) {
     console.log("Picked up piece from " + square.id);
 }
 
-function placePiece(square) {
+function placePiece(e) {
+    var square = e.target
     console.log("Placed piece on " + square.id);
     // if move is legal
     // modify board

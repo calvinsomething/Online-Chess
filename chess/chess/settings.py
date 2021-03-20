@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'filters.apps.FiltersConfig',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_auth'
+    'rest_auth',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -74,7 +75,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'chess.wsgi.application'
-
+ASGI_APPLICATION = "chess.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
@@ -141,3 +142,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication'
     ]
 }
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Strict'

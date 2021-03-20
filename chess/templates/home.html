@@ -42,7 +42,7 @@
         {% if row == '0' %}
           <div class="col">
         {% endif %}
-          <div class={{row|choosecolor:col}} id="{{row}},{{col}}" onmousedown="pickUpPiece(this)" onmouseup="placePiece(this)"></div>
+          <div class={{row|choosecolor:col}} id="{{row}},{{col}}"></div>
         {% if row == '7' %}
           </div>
         {% endif %}

@@ -8,6 +8,3 @@ def home(request):
 @login_required(login_url="login")
 def game(request, game_id):
     return render(request, "home.html", {'game_id': game_id})
-
-def test(request):
-    return render(request, "test.html")
