@@ -1,6 +1,23 @@
 const newGameUrl = "http://127.0.0.1:8000/api/newgame/"
 const boardUrl = "http://127.0.0.1:8000/api/gameboard/"
 const token = getCookie('csrftoken');
+let game_id = 1;
+const movesSocket = new WebSocket(
+    'ws://'
+    + window.location.host
+    + '/ws/moves/'
+    // + game_id
+    // + '/'
+);
+
+movesSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    console.log(data);
+};
+
+movesSocket.onclose = function(e) {
+    console.error('Moves socket closed unexpectedly');
+};
 
 document.getElementById("findGame").addEventListener('click', findGame);
 
@@ -145,6 +162,10 @@ function placePiece(e) {
     }
     
     document.getElementById("board").style.cursor = "default";
+
+    movesSocket.send(JSON.stringify({
+        'move': square.id
+    }));
 }
 
 function getWinSize() {
