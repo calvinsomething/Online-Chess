@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import GameBoardView, NewGameView, Test, findGame
 
+app_name = 'api'
 
 urlpatterns = [
     path('newgame/', NewGameView.as_view(), name='newgame'),

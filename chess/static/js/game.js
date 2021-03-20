@@ -1,7 +1,5 @@
-const newGameUrl = "http://127.0.0.1:8000/api/newgame/"
-const boardUrl = "http://127.0.0.1:8000/api/gameboard/"
 const token = getCookie('csrftoken');
-let game_id = 1;
+
 const movesSocket = new WebSocket(
     'ws://'
     + window.location.host
