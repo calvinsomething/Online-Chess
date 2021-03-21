@@ -1,20 +1,20 @@
 const token = getCookie('csrftoken');
 
-const movesSocket = new WebSocket(
+const gameSocket = new WebSocket(
     'ws://'
     + window.location.host
-    + '/ws/moves/'
-    // + game_id
-    // + '/'
+    + '/ws/game/'
+    + game_id
+    + '/'
 );
 
-movesSocket.onmessage = function(e) {
+gameSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
     console.log(data);
 };
 
-movesSocket.onclose = function(e) {
-    console.error('Moves socket closed unexpectedly');
+gameSocket.onclose = function(e) {
+    console.error('Game socket closed unexpectedly');
 };
 
 document.getElementById("findGame").addEventListener('click', findGame);
@@ -161,8 +161,8 @@ function placePiece(e) {
     
     document.getElementById("board").style.cursor = "default";
 
-    movesSocket.send(JSON.stringify({
-        'move': square.id
+    gameSocket.send(JSON.stringify({
+        'board': square.id
     }));
 }
 
