@@ -1,20 +1,19 @@
 const token = getCookie('csrftoken');
 
-const gameSocket = new WebSocket(
+const socket = new WebSocket(
     'ws://'
     + window.location.host
-    + '/ws/game/'
-    + game_id
-    + '/'
+    + '/ws/user/'
+    // + '/ws/game/1/'
 );
 
-gameSocket.onmessage = function(e) {
+socket.onmessage = function(e) {
     const data = JSON.parse(e.data);
     console.log(data);
 };
 
-gameSocket.onclose = function(e) {
-    console.error('Game socket closed unexpectedly');
+socket.onclose = function(e) {
+    console.error('Socket closed unexpectedly');
 };
 
 document.getElementById("findGame").addEventListener('click', findGame);
@@ -29,7 +28,7 @@ document.getElementById("findGame").addEventListener('click', findGame);
 
 function findGame() {
     var opponent = window.prompt("Enter opponent's username: ", "Username");
-    fetch("http://127.0.0.1:8000/api/findgame/", {
+    fetch(findGameUrl, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -37,7 +36,6 @@ function findGame() {
             'X-CSRFToken': token
         },
         body: JSON.stringify({
-            'user': 'me',
             'opponent': opponent
         })
     },)
@@ -85,8 +83,8 @@ function getCookie(name) {
 
 function getBoard() {
     fetch(boardUrl, {credentials: 'include'})
-    .then((rsp) => rsp.json())
-    .then(function(data){
+    .then(rsp => rsp.json())
+    .then(data => {
         console.log("Data:", data)
     })
 }
@@ -161,9 +159,9 @@ function placePiece(e) {
     
     document.getElementById("board").style.cursor = "default";
 
-    gameSocket.send(JSON.stringify({
-        'board': square.id
-    }));
+    // socket.send(JSON.stringify({
+    //     'board': square.id
+    // }));
 }
 
 function getWinSize() {

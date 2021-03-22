@@ -134,9 +134,9 @@
 </div>
 </div>
 <script type="text/javascript">
-  const game_id = {{ game_id }};
-  const newGameUrl = '{% url 'api:newgame' %}'
-  const boardUrl = '{% url 'api:gameboard' %}'
+  const newGameUrl = '{% url 'api:newgame' %}';
+  const boardUrl = '{% url 'api:gameboard' %}';
+  const findGameUrl = '{% url 'api:findgame' %}';
 </script>
 <script src={% static "js/game.js" %}></script>
 {% endblock content %}
