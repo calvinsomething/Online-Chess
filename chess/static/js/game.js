@@ -4,13 +4,22 @@ const socket = new WebSocket(
     'ws://'
     + window.location.host
     + '/ws/user/'
-    // + '/ws/game/1/'
 );
 
 socket.onmessage = function(e) {
     const data = JSON.parse(e.data);
+    challenges(data);
+    updateBoard(data);
     console.log(data);
 };
+
+function challenges(data) {
+    var acceptChallenge = false;
+    if (data['challenger'])
+        acceptChallenge = window.confirm(`Challenge incoming from ${data['challenger']}. Do you accept?`);
+    if (acceptChallenge)
+        newGame(data['challenger']);
+}
 
 socket.onclose = function(e) {
     console.error('Socket closed unexpectedly');
@@ -19,7 +28,7 @@ socket.onclose = function(e) {
 document.getElementById("findGame").addEventListener('click', findGame);
 
 ['sq-w', 'sq-b'].forEach(sq => {
-    for(element of document.getElementsByClassName(sq)) {
+    for (element of document.getElementsByClassName(sq)) {
         element.addEventListener('mousedown', pickUpPiece);
         element.addEventListener('mouseup', placePiece);
     }
@@ -48,15 +57,18 @@ function findGame() {
     });
 }
 
-function newGame() {
+function newGame(opponent) {
     fetch(newGameUrl, {
         method: 'POST',
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': token
-        }
-    })
+        },
+        body: JSON.stringify({
+            'opponent': opponent
+        })
+    },)
     .then(response => response.json())
     .then(data => {
         console.log('Success:', data);
@@ -80,7 +92,7 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-
+const boardUrl = 0;
 function getBoard() {
     fetch(boardUrl, {credentials: 'include'})
     .then(rsp => rsp.json())
@@ -109,6 +121,24 @@ function setBoard() {
             draw(document.getElementById(`${row},${col}`), board[row][col]);
         }
     console.log("setting board");
+}
+
+function translate(piece) {
+    if (piece === '0') return piece;
+    if (piece === piece.toLowerCase())
+        return `W${piece.toUpperCase()}`;
+    else return `B${piece}`;
+}
+
+function updateBoard(data) {
+    if (!data['board']) return;
+    var row, col;
+    for (let sq = 0; sq < 64; sq++) {
+        row = Math.floor(sq / 8);
+        col = sq % 8;
+        draw(document.getElementById(`${row},${col}`), translate(data['board'][sq]));
+    }
+    console.log(data['user']);
 }
 
 function draw(square, piece) {
@@ -179,12 +209,6 @@ function Square() {
 
 
 let board = [];
-for(let row = 0; row < 8; row++) {
-    board[row] = [];
-    for(let col = 0; col < 8; col++) {
-        board[row][col] = '';
-    }
-}
 
 let takenFrom;
 let inHand;
@@ -193,6 +217,6 @@ const whiteStart = [
     'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'
 ];
 
-document.onload = setBoard();
+//document.onload = setBoard();
 //newGame();
 //getBoard();

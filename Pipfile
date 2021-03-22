@@ -9,6 +9,8 @@ pylint-django = "*"
 pylint = "*"
 djangorestframework = "*"
 django-rest-auth = "*"
+channels-redis = "*"
+django-redis = "*"
 
 [dev-packages]
 

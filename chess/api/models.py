@@ -1,24 +1,21 @@
 from django.db import models
 from django.utils import timezone
-from random import randint
-
+from django.contrib.auth import get_user_model
 
 class GameBoard(models.Model):
-    def flipCoin():
-        return randint(0,1)
-    
-    whiteUserId = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='whiteUserId')
-    blackUserId = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='blackUserId')
+    whiteUserId = models.ForeignKey(get_user_model(), on_delete=models.PROTECT, related_name='whiteUserId')
+    blackUserId = models.ForeignKey(get_user_model(), on_delete=models.PROTECT, related_name='blackUserId')
     timeStarted = models.DateTimeField(default=timezone.now)
     whitesTurn = models.BooleanField(default=True)
-    board = models.CharField(max_length=64, default="\
-        RNBQKBNR\
-        PPPPPPPP\
-        00000000\
-        00000000\
-        00000000\
-        00000000\
-        pppppppp\
-        rnbqkbnr")
+    checkMate = models.BooleanField(default=False)
+    board = models.CharField(max_length=64, default=\
+        "RNBQKBNR" + \
+        "PPPPPPPP" + \
+        "00000000" + \
+        "00000000" + \
+        "00000000" + \
+        "00000000" + \
+        "pppppppp" + \
+        "rnbqkbnr")
     
-    moves = models.TextField()
+    moves = models.TextField(blank=True)
