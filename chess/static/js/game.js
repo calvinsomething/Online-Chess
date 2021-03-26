@@ -123,6 +123,14 @@ function getBoard() {
 //     console.log("setting board");
 // }
 
+function getLegalMoves(squareId) {
+    var square = parseInt(squareId[0]) * 8 + parseInt(squareId[2]) % 8;
+    if (playerColor === 'B') square = 63 - square;
+    socket.send(JSON.stringify({
+        'getMoves': square
+    }));
+}
+
 function translate(piece) {
     if (piece === '0') return 0;
     if (piece === piece.toLowerCase())
@@ -174,8 +182,9 @@ function pickUpPiece(e) {
         return;
     if(!inHand) {
         inHand = board[square.id[0]][square.id[2]];
+        getLegalMoves(square.id);
         takenFrom = square.id;
-        draw(square, '');
+        square.style.backgroundImage = null;
     }
     var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
     if(inHand)

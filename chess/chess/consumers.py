@@ -4,6 +4,7 @@ from api.models import GameBoard
 from channels.db import database_sync_to_async
 
 class UserConsumer(AsyncWebsocketConsumer):
+    game_id = 0
     async def connect(self):
         self.group_name = "user%s" % self.scope['user'].id
         await self.channel_layer.group_add(
@@ -20,17 +21,28 @@ class UserConsumer(AsyncWebsocketConsumer):
         }))
 
     @database_sync_to_async
-    def getBoard(self, game_id):
-        return GameBoard.objects.get(id=game_id)
+    def getBoard(self):
+        return GameBoard.objects.get(id=self.game_id)
 
-    
     @database_sync_to_async
     def getBlackId(self, game):
         return game.blackUser.id
 
+    @database_sync_to_async
+    def getMoves(self, piece):
+        game = GameBoard.objects.get(id=self.game_id)
+        return game.getMoves(piece, self.scope['user'].id)
+
+    async def returnMoves(self, piece):
+        moves = await self.getMoves(piece)
+        text_data = {
+            'moves': moves
+        }
+        await self.send(text_data=json.dumps(text_data))
 
     async def updateBoard(self, event):
-        game = await self.getBoard(event['game_id'])
+        self.game_id = event['game_id']
+        game = await self.getBoard()
         blackId = await self.getBlackId(game)
         data = {
             'user': blackId,
@@ -46,7 +58,9 @@ class UserConsumer(AsyncWebsocketConsumer):
         pass
 
     async def receive(self, text_data):
-        pass
+        text_data_json = json.loads(text_data)
+        if text_data_json['getMoves']:
+            await self.returnMoves(text_data_json['getMoves'])
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
