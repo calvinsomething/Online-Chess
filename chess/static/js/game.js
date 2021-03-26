@@ -101,30 +101,30 @@ function getBoard() {
     })
 }
 
-function setBoard() {
-    takenFrom = undefined;
-    for(let row = 0; row < 8; row++)
-        for(let col = 0; col < 8; col++) {
-            switch(row) {
-                case 0:
-                    board[row][col] = 'B' + whiteStart[col];
-                    break;
-                case 7:
-                    board[row][col] = 'W' + whiteStart[col];
-                    break;
-                case 1:
-                    board[row][col] = 'BP';
-                    break;
-                case 6:
-                    board[row][col] = 'WP';
-            }
-            draw(document.getElementById(`${row},${col}`), board[row][col]);
-        }
-    console.log("setting board");
-}
+// function setBoard() {
+//     takenFrom = undefined;
+//     for(let row = 0; row < 8; row++)
+//         for(let col = 0; col < 8; col++) {
+//             switch(row) {
+//                 case 0:
+//                     board[row][col] = 'B' + whiteStart[col];
+//                     break;
+//                 case 7:
+//                     board[row][col] = 'W' + whiteStart[col];
+//                     break;
+//                 case 1:
+//                     board[row][col] = 'BP';
+//                     break;
+//                 case 6:
+//                     board[row][col] = 'WP';
+//             }
+//             draw(document.getElementById(`${row},${col}`), board[row][col]);
+//         }
+//     console.log("setting board");
+// }
 
 function translate(piece) {
-    if (piece === '0') return piece;
+    if (piece === '0') return 0;
     if (piece === piece.toLowerCase())
         return `W${piece.toUpperCase()}`;
     else return `B${piece}`;
@@ -132,28 +132,46 @@ function translate(piece) {
 
 function updateBoard(data) {
     if (!data['board']) return;
-    var row, col;
-    for (let sq = 0; sq < 64; sq++) {
-        row = Math.floor(sq / 8);
-        col = sq % 8;
-        draw(document.getElementById(`${row},${col}`), translate(data['board'][sq]));
+    if (data['playingBlack']) {
+        var sq = 64;
+        for (let row = 0; row < 8; row++)
+            for (let col = 0; col < 8; col++) {
+                sq -= 1;
+                board[row][col] = translate(data['board'][sq]);
+        }
+        playerColor = 'B';
+        draw();
+        return;
     }
-    console.log(data['user']);
+    for (let row = 0; row < 8; row++)
+        for (let col = 0; col < 8; col++) {
+            const sq = row * 8 + col % 8;
+            board[row][col] = translate(data['board'][sq]);
+        }
+    playerColor = 'W';
+    draw();
 }
 
-function draw(square, piece) {
-    if(piece) {
-        square.style.backgroundImage = `url(static/images/pieces/${piece}.png)`;
-        square.style.backgroundRepeat = "no-repeat";
-        square.style.backgroundPosition = "center";
-        square.style.backgroundSize = "cover";
-    }
-    else
-        square.style.backgroundImage = null;
+function draw() {
+    for (let row = 0; row < 8; row++)
+        for (let col = 0; col < 8; col++) {
+            const square = document.getElementById(`${row},${col}`);
+            const piece = board[row][col];
+            if (piece) {
+                square.style.backgroundImage = `url(static/images/pieces/${piece}.png)`;
+                square.style.backgroundRepeat = "no-repeat";
+                square.style.backgroundPosition = "center";
+                square.style.backgroundSize = "cover";
+            }
+            else
+                square.style.backgroundImage = null;
+        }
 }
 
 function pickUpPiece(e) {
-    var square = e.target
+    var square = e.target;
+    if (board[square.id[0]][square.id[2]][0] !== playerColor)
+        return;
     if(!inHand) {
         inHand = board[square.id[0]][square.id[2]];
         takenFrom = square.id;
@@ -209,13 +227,16 @@ function Square() {
 
 
 let board = [];
-
+for(let row = 0; row < 8; row++)
+    board[row] = [];
+let playerColor;
 let takenFrom;
 let inHand;
+let myTurn = false;
 
-const whiteStart = [
-    'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'
-];
+// const whiteStart = [
+//     'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'
+// ];
 
 //document.onload = setBoard();
 //newGame();

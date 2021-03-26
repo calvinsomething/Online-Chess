@@ -30,9 +30,9 @@ def newGame(request):
     opponentName = request.data.get("opponent")
     opponent = User.objects.get(username=opponentName)
     if randint(0,1):
-        freshBoard = GameBoard(whiteUserId=user, blackUserId=opponent)
+        freshBoard = GameBoard(whiteUser=user, blackUser=opponent)
     else:
-        freshBoard = GameBoard(whiteUserId=opponent, blackUserId=user)
+        freshBoard = GameBoard(whiteUser=opponent, blackUser=user)
     freshBoard.save()
     user.currentGame = freshBoard
     user.save()

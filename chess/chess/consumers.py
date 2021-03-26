@@ -26,20 +26,21 @@ class UserConsumer(AsyncWebsocketConsumer):
     
     @database_sync_to_async
     def getBlackId(self, game):
-        return game.blackUserId.id
+        return game.blackUser.id
 
 
     async def updateBoard(self, event):
         game = await self.getBoard(event['game_id'])
         blackId = await self.getBlackId(game)
+        data = {
+            'user': blackId,
+            'board': game.board
+        }
         if self.scope['user'].id == blackId:
-            board = game.board[::-1]
+            data['playingBlack'] = 'True'
         else:
             board = game.board
-        await self.send(text_data=json.dumps({
-            'user': blackId,
-            'board': board
-        }))
+        await self.send(text_data=json.dumps(data))
 
     async def newGame(self, event):
         pass
