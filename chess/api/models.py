@@ -20,13 +20,26 @@ class GameBoard(models.Model):
     
     moves = models.TextField(blank=True)
 
+    
+
     def getMoves(self, piece, playerId):
+        if (playerId == self.whiteUser.id and self.board[piece] == self.board[piece].lower()) \
+            or (playerId == self.blackUser.id and self.board[piece] == self.board[piece].upper()):
+            return self.movesByPiece[self.board[piece]](self, piece)
+
+
+    def pawnMoves(self, piece):
         legalMoves = '0' * 64
         if self.board[piece] == 'p':
             if 47 < piece < 56:
                 legalMoves = self.alterString(legalMoves, '1', piece - 16, piece - 8)
             else:
                 legalMoves = self.alterString(legalMoves, '1', piece - 8)
+        if self.board[piece] == 'P':
+            if 7 < piece < 16:
+                legalMoves = self.alterString(legalMoves, '1', piece + 8, piece + 16)
+            else:
+                legalMoves = self.alterString(legalMoves, '1', piece + 8)
         return legalMoves
 
     
@@ -41,3 +54,19 @@ class GameBoard(models.Model):
         for segment in segments:
             newString += segment
         return newString
+
+    
+    movesByPiece = {
+        'p': pawnMoves,
+        'P': pawnMoves,
+        # 'r': rookMoves,
+        # 'R': rookMoves,
+        # 'n': knightMoves,
+        # 'N': knightMoves,
+        # 'b': bishopMoves,
+        # 'B': bishopMoves,
+        # 'q': queenMoves,
+        # 'Q': queenMoves,
+        # 'k': kingMoves,
+        # 'K': kingMoves
+    }

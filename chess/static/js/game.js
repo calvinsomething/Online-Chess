@@ -1,4 +1,5 @@
 const token = getCookie('csrftoken');
+const highlight = 'rgb(74, 171, 216)';
 
 const socket = new WebSocket(
     'ws://'
@@ -8,15 +9,41 @@ const socket = new WebSocket(
 
 socket.onmessage = function(e) {
     const data = JSON.parse(e.data);
-    challenges(data);
-    updateBoard(data);
+    if (data['challenger']) challenges(data);
+    if (data['board']) updateBoard(data);
+    if (data['moves']) legalMoves(data);
     console.log(data);
 };
 
+function legalMoves(data) {
+    moves = data['moves'];
+    if (playerColor === 'B') {
+        var sq = 64;
+        for (let row = 0; row < 8; row++)
+            for (let col = 0; col < 8; col++) {
+                sq -= 1;
+                if(moves[sq] === '1')
+                    document.getElementById(`${row},${col}`).style.backgroundColor = highlight;
+        }
+        return;
+    }
+    for (let row = 0; row < 8; row++)
+        for (let col = 0; col < 8; col++) {
+            const sq = row * 8 + col % 8;
+            if(moves[sq] === '1')
+                    document.getElementById(`${row},${col}`).style.backgroundColor = highlight;
+        }
+}
+
+function clearHighlights() {
+    for (let row = 0; row < 8; row++)
+        for (let col = 0; col < 8; col++) {
+            document.getElementById(`${row},${col}`).style.backgroundColor = null;
+        }
+}
+
 function challenges(data) {
-    var acceptChallenge = false;
-    if (data['challenger'])
-        acceptChallenge = window.confirm(`Challenge incoming from ${data['challenger']}. Do you accept?`);
+    acceptChallenge = window.confirm(`Challenge incoming from ${data['challenger']}. Do you accept?`);
     if (acceptChallenge)
         newGame(data['challenger']);
 }
@@ -139,13 +166,13 @@ function translate(piece) {
 }
 
 function updateBoard(data) {
-    if (!data['board']) return;
+    official = data['board'];
     if (data['playingBlack']) {
         var sq = 64;
         for (let row = 0; row < 8; row++)
             for (let col = 0; col < 8; col++) {
                 sq -= 1;
-                board[row][col] = translate(data['board'][sq]);
+                board[row][col] = translate(official[sq]);
         }
         playerColor = 'B';
         draw();
@@ -154,7 +181,7 @@ function updateBoard(data) {
     for (let row = 0; row < 8; row++)
         for (let col = 0; col < 8; col++) {
             const sq = row * 8 + col % 8;
-            board[row][col] = translate(data['board'][sq]);
+            board[row][col] = translate(official[sq]);
         }
     playerColor = 'W';
     draw();
@@ -206,12 +233,13 @@ function placePiece(e) {
     // then modify display
     if(takenFrom) {
         board[takenFrom[0]][takenFrom[2]] = '';
-        draw(document.getElementById(takenFrom), '');
+        //draw(document.getElementById(takenFrom), '');
     }
     if(inHand) {
         board[square.id[0]][square.id[2]] = inHand;
-        draw(square, inHand);
+        //draw(square, inHand);
         inHand = '';
+        clearHighlights();
     }
     
     document.getElementById("board").style.cursor = "default";
