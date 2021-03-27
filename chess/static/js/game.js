@@ -151,10 +151,8 @@ function getBoard() {
 // }
 
 function getLegalMoves(squareId) {
-    var square = parseInt(squareId[0]) * 8 + parseInt(squareId[2]) % 8;
-    if (playerColor === 'B') square = 63 - square;
     socket.send(JSON.stringify({
-        'getMoves': square
+        'getMoves': getSquare(squareId)
     }));
 }
 
@@ -225,28 +223,28 @@ function pickUpPiece(e) {
     console.log("Picked up piece from " + square.id);
 }
 
+function getSquare(squareId) {
+    var square = parseInt(squareId[0]) * 8 + parseInt(squareId[2]) % 8;
+    if (playerColor === 'B') square = 63 - square;
+    return square;
+}
+
 function placePiece(e) {
-    var square = e.target
+    if (!inHand) return;
+    document.getElementById("board").style.cursor = "default";
+    var square = e.target;
     console.log("Placed piece on " + square.id);
-    // if move is legal
-    // modify board
-    // then modify display
-    if(takenFrom) {
-        board[takenFrom[0]][takenFrom[2]] = '';
-        //draw(document.getElementById(takenFrom), '');
+    if (square.style.backgroundColor === highlight) {
+        socket.send(JSON.stringify({
+            'makeMove': [getSquare(takenFrom), getSquare(square.id)]
+        }));
     }
+
     if(inHand) {
         board[square.id[0]][square.id[2]] = inHand;
-        //draw(square, inHand);
         inHand = '';
         clearHighlights();
     }
-    
-    document.getElementById("board").style.cursor = "default";
-
-    // socket.send(JSON.stringify({
-    //     'board': square.id
-    // }));
 }
 
 function getWinSize() {

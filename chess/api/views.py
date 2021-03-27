@@ -42,11 +42,11 @@ def newGame(request):
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
     "user%s" % user.id,
-    {"type": "updateBoard", "game_id": freshBoard.id}
+    {"type": "newGame", "game_id": freshBoard.id, "opponent_id": opponent.id}
     )
     async_to_sync(channel_layer.group_send)(
     "user%s" % opponent.id,
-    {"type": "updateBoard", "game_id": freshBoard.id}
+    {"type": "newGame", "game_id": freshBoard.id, "opponent_id": user.id}
     )
     return Response({"new board": freshBoard.id})
 

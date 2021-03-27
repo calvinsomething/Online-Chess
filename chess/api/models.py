@@ -20,11 +20,23 @@ class GameBoard(models.Model):
     
     moves = models.TextField(blank=True)
 
-    
+
+    def makeMove(self, move, playerId):
+        legalMoves = self.getMoves(move[0], playerId)
+        if legalMoves[move[1]] == '1':
+            temp = self.alterString(self.board, '0', move[0])
+            self.board = self.alterString(temp, self.board[move[0]], move[1])
+            self.save()
+            return True
+        return False
+            
 
     def getMoves(self, piece, playerId):
-        if (playerId == self.whiteUser.id and self.board[piece] == self.board[piece].lower()) \
-            or (playerId == self.blackUser.id and self.board[piece] == self.board[piece].upper()):
+        myPiece = (playerId == self.whiteUser.id and self.board[piece] == self.board[piece].lower()) \
+            or (playerId == self.blackUser.id and self.board[piece] == self.board[piece].upper())
+        myTurn = (self.whitesTurn and playerId == self.whiteUser.id) \
+            or not (self.whitesTurn or playerId == self.whiteUser.id)
+        if myPiece and myTurn:
             return self.movesByPiece[self.board[piece]](self, piece)
 
 

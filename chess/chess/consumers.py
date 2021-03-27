@@ -2,9 +2,12 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from api.models import GameBoard
 from channels.db import database_sync_to_async
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 class UserConsumer(AsyncWebsocketConsumer):
     game_id = 0
+    opponent_id = 0
     async def connect(self):
         self.group_name = "user%s" % self.scope['user'].id
         await self.channel_layer.group_add(
@@ -33,6 +36,17 @@ class UserConsumer(AsyncWebsocketConsumer):
         game = GameBoard.objects.get(id=self.game_id)
         return game.getMoves(piece, self.scope['user'].id)
 
+    @database_sync_to_async
+    def makeMove(self, move):
+        game = GameBoard.objects.get(id=self.game_id)
+        if game.makeMove(move, self.scope['user'].id):
+            async_to_sync(self.updateBoard)()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "user%s" % self.opponent_id,
+                {"type": "updateBoard"}
+            )
+
     async def returnMoves(self, piece):
         moves = await self.getMoves(piece)
         text_data = {
@@ -40,12 +54,10 @@ class UserConsumer(AsyncWebsocketConsumer):
         }
         await self.send(text_data=json.dumps(text_data))
 
-    async def updateBoard(self, event):
-        self.game_id = event['game_id']
+    async def updateBoard(self, *args):
         game = await self.getBoard()
         blackId = await self.getBlackId(game)
         data = {
-            'user': blackId,
             'board': game.board
         }
         if self.scope['user'].id == blackId:
@@ -55,12 +67,16 @@ class UserConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(data))
 
     async def newGame(self, event):
-        pass
+        self.game_id = event['game_id']
+        self.opponent_id = event['opponent_id']
+        await self.updateBoard()
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        if text_data_json['getMoves']:
+        if text_data_json.get('getMoves'):
             await self.returnMoves(text_data_json['getMoves'])
+        if text_data_json.get('makeMove'):
+            await self.makeMove(text_data_json['makeMove'])
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
