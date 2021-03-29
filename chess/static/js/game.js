@@ -165,6 +165,8 @@ function translate(piece) {
 
 function updateBoard(data) {
     official = data['board'];
+    if (data['myTurn'] === 'True') myTurn = true;
+    else myTurn = false;
     if (data['playingBlack']) {
         var sq = 64;
         for (let row = 0; row < 8; row++)
@@ -202,6 +204,7 @@ function draw() {
 }
 
 function pickUpPiece(e) {
+    if (!myTurn) return;
     var square = e.target;
     if (board[square.id[0]][square.id[2]][0] !== playerColor)
         return;

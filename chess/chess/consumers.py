@@ -28,6 +28,13 @@ class UserConsumer(AsyncWebsocketConsumer):
         return GameBoard.objects.get(id=self.game_id)
 
     @database_sync_to_async
+    def myTurn(self):
+        game = GameBoard.objects.get(id=self.game_id)
+        myTurn = (game.whitesTurn and self.scope['user'].id == game.whiteUser.id)\
+            or not (game.whitesTurn or self.scope['user'].id == game.whiteUser.id)
+        return myTurn
+
+    @database_sync_to_async
     def getBlackId(self, game):
         return game.blackUser.id
 
@@ -62,8 +69,12 @@ class UserConsumer(AsyncWebsocketConsumer):
         }
         if self.scope['user'].id == blackId:
             data['playingBlack'] = 'True'
-        else:
-            board = game.board
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        print(self.scope['user'].id)
+        print(await self.myTurn())
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        if await self.myTurn():
+            data['myTurn'] = 'True'
         await self.send(text_data=json.dumps(data))
 
     async def newGame(self, event):

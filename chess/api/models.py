@@ -26,6 +26,7 @@ class GameBoard(models.Model):
         if legalMoves[move[1]] == '1':
             temp = self.alterString(self.board, '0', move[0])
             self.board = self.alterString(temp, self.board[move[0]], move[1])
+            self.whitesTurn = not self.whitesTurn
             self.save()
             return True
         return False
