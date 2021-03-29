@@ -69,10 +69,6 @@ class UserConsumer(AsyncWebsocketConsumer):
         }
         if self.scope['user'].id == blackId:
             data['playingBlack'] = 'True'
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        print(self.scope['user'].id)
-        print(await self.myTurn())
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         if await self.myTurn():
             data['myTurn'] = 'True'
         await self.send(text_data=json.dumps(data))

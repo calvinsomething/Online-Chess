@@ -20,7 +20,7 @@ class GameBoard(models.Model):
     
     moves = models.TextField(blank=True)
 
-
+    
     def makeMove(self, move, playerId):
         legalMoves = self.getMoves(move[0], playerId)
         if legalMoves[move[1]] == '1':
@@ -30,7 +30,7 @@ class GameBoard(models.Model):
             self.save()
             return True
         return False
-            
+
 
     def getMoves(self, piece, playerId):
         myPiece = (playerId == self.whiteUser.id and self.board[piece] == self.board[piece].lower()) \
@@ -39,27 +39,105 @@ class GameBoard(models.Model):
             or not (self.whitesTurn or playerId == self.whiteUser.id)
         if myPiece and myTurn:
             return self.movesByPiece[self.board[piece]](self, piece)
-
+        else:
+            return '0' * 64
+        
 
     def pawnMoves(self, piece):
         legalMoves = '0' * 64
         if self.board[piece] == 'p':
             if 47 < piece < 56:
-                legalMoves = self.alterString(legalMoves, '1', piece - 16, piece - 8)
+                return self.alterString(legalMoves, '1', piece - 16, piece - 8)
             else:
-                legalMoves = self.alterString(legalMoves, '1', piece - 8)
+                return self.alterString(legalMoves, '1', piece - 8)
         if self.board[piece] == 'P':
             if 7 < piece < 16:
-                legalMoves = self.alterString(legalMoves, '1', piece + 8, piece + 16)
+                return self.alterString(legalMoves, '1', piece + 8, piece + 16)
             else:
-                legalMoves = self.alterString(legalMoves, '1', piece + 8)
-        return legalMoves
+                return self.alterString(legalMoves, '1', piece + 8)
 
-    
+
+    def kingMoves(self, piece):
+        return self.queenMoves(piece, isKing = True)
+
+
+    def queenMoves(self, piece, isKing = False):
+        legalMoves = '0' * 64
+        row = piece // 8
+        col = piece % 8
+        positions = []
+        if isKing:
+            rng = 1
+        else:
+            if 7 - row > row:
+                rng = 8 - row
+            else:
+                rng = row + 1
+            if (7 - col > col) and (7 - col > rng):
+                rng = 8 - col
+            elif col > rng:
+                rng = col + 1
+        moves = (1, 7, 8, 9)
+        for dist in range(rng):
+            for move in moves:
+                if move * rng < 64:
+                    positions.append(move * rng)
+                if -(move * rng) > -1:
+                    positions.append(-(move * rng))
+        positions.sort()
+        return self.alterString(legalMoves, '1', *positions)
+
+
+    def rookMoves(self, piece):
+        legalMoves = '0' * 64
+        row = piece // 8
+        col = piece % 8
+        positions = []
+        for sq in range(8):
+            if sq != row:
+                positions.append(sq * 8 + col)
+            if sq != col:
+                positions.append(row * 8 + sq)
+        positions.sort()
+        return self.alterString(legalMoves, '1', *positions)
+
+
+    def knightMoves(self, piece):
+        legalMoves = '0' * 64
+        positions = []
+        moves = (6, 10, 15, 17)
+        for move in moves:
+            if piece - move > -1:
+                positions.append(piece - move)
+            if piece + move < 64:
+                positions.append(piece + move)
+        positions.sort()
+        return self.alterString(legalMoves, '1', *positions)
+
+    def bishopMoves(self, piece):
+        legalMoves = '0' * 64
+        row = piece // 8
+        col = piece % 8
+        positions = []
+        diff = 1
+        while (row - diff > -1) or (row + diff < 8):
+            current = row - diff
+            if current > -1:
+                positions.append(current - diff)
+                positions.append(current + diff)
+            current = row + diff
+            if current < 8:
+                positions.append(current - diff)
+                positions.append(current + diff)
+        positions.sort()
+        return self.alterString(legalMoves, '1', *positions)
+
     def alterString(self, string, value, *positions):
         segments = []
         lastPos = 0
         for position in positions:
+            if 0 > position > 63:
+                continue
             segments.append(string[lastPos:position] + value)
             lastPos = position + 1
         segments.append(string[lastPos:])
@@ -72,14 +150,14 @@ class GameBoard(models.Model):
     movesByPiece = {
         'p': pawnMoves,
         'P': pawnMoves,
-        # 'r': rookMoves,
-        # 'R': rookMoves,
-        # 'n': knightMoves,
-        # 'N': knightMoves,
-        # 'b': bishopMoves,
-        # 'B': bishopMoves,
-        # 'q': queenMoves,
-        # 'Q': queenMoves,
-        # 'k': kingMoves,
-        # 'K': kingMoves
+        'r': rookMoves,
+        'R': rookMoves,
+        'n': knightMoves,
+        'N': knightMoves,
+        'b': bishopMoves,
+        'B': bishopMoves,
+        'q': queenMoves,
+        'Q': queenMoves,
+        'k': kingMoves,
+        'K': kingMoves
     }
