@@ -18,21 +18,22 @@ socket.onmessage = function(e) {
 function legalMoves(data) {
     moves = data['moves'];
 
-    if (playerColor === 'B') {
-        for (let row = 0; row < 8; row++)
-            for (let col = 0; col < 8; col++) {
-                if (moves[7 - row] === 0) continue;
-                if (moves[7 - row] & 1 << (col)) 
-                    document.getElementById(`${row},${col}`).style.backgroundColor = highlight;
+    for (let half = 0; half < 2; half++) {
+        console.log(moves[half]);
+        if (moves[half] === 0) continue;
+        for (let sq = 0; sq < 32; sq++) {
+            if (moves[half] & 1 << (31 - sq)) {
+                console.log(sq);
+                var row = Math.floor(sq / 8) + half * 4;
+                var col = sq % 8;
+                if (playerColor === 'B') {
+                    row = 7 - row;
+                    col = 7 - col;
+                }
+                document.getElementById(`${row},${col}`).style.backgroundColor = highlight;
+            }
         }
-        return;
     }
-    for (let row = 0; row < 8; row++)
-        for (let col = 0; col < 8; col++) {
-            if (moves[row] === 0) continue;
-            if(moves[row] & 1 << (7 - col))
-                    document.getElementById(`${row},${col}`).style.backgroundColor = highlight;
-        }
 }
 
 function clearHighlights() {

@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
+
 class GameBoard(models.Model):
     whiteUser = models.ForeignKey(get_user_model(), on_delete=models.PROTECT, related_name='whiteUser')
     blackUser = models.ForeignKey(get_user_model(), on_delete=models.PROTECT, related_name='blackUser')
@@ -23,14 +24,18 @@ class GameBoard(models.Model):
     
     def makeMove(self, move, playerId):
         legalMoves = self.getMoves(move[0], playerId)
-        row = move[1] // 8
-        col = move[1] % 8
-        if legalMoves[row] & (1 << (7 - col)):
-            temp = self.alterString(self.board, '0', move[0])
-            self.board = self.alterString(temp, self.board[move[0]], move[1])
-            self.whitesTurn = not self.whitesTurn
-            self.save()
-            return True
+        moveBitset = self.toBitset(move[1], [0, 0])
+        print("%%%%%%%%%%%%%%%%%%%%%%")
+        print(legalMoves)
+        print(moveBitset)
+        print("%%%%%%%%%%%%%%%%%%%%%%")
+        for half in range(2):
+            if moveBitset[half] & legalMoves[half]:
+                temp = self.alterString(self.board, '0', move[0])
+                self.board = self.alterString(temp, self.board[move[0]], move[1])
+                self.whitesTurn = not self.whitesTurn
+                self.save()
+                return True
         return False
 
 
@@ -42,25 +47,29 @@ class GameBoard(models.Model):
         if myPiece and myTurn:
             return self.movesByPiece[self.board[piece]](self, piece)
         else:
-            return [0 for row in range(8)]
-        
+            return [0, 0]
+    
+
+    def toBitset(self, square, bitset):
+        bitset[square // 32] += 1 << (31 - (square % 32))
+        return bitset
 
     def pawnMoves(self, piece):
-        legalMoves = [0 for row in range(8)]
+        legalMoves = [0, 0]
         col = piece % 8
         row = piece // 8
         if self.board[piece] == 'p':
             if self.board[piece - 8] == '0':
-                legalMoves[row - 1] = 1 << (7 - col)
+                legalMoves = self.toBitset(piece - 8, legalMoves)
             else: return legalMoves
             if row == 6 and self.board[piece - 16] == '0':
-                    legalMoves[4] = 1 << (7 - col)
+                legalMoves = self.toBitset(piece - 16, legalMoves)
         else:
             if self.board[piece + 8] == '0':
-                legalMoves[row + 1] = 1 << (7 - col)
+                legalMoves = self.toBitset(piece + 8, legalMoves)
             else: return legalMoves
             if row == 1 and self.board[piece + 16] == '0':
-                    legalMoves[3] = 1 << (7 - col)
+                    legalMoves = self.toBitset(piece + 16, legalMoves)
         return legalMoves
 
 
@@ -95,29 +104,40 @@ class GameBoard(models.Model):
         return self.alterString(legalMoves, '1', *positions)
 
 
+    def v1(self, row, col, range):
+        if row - range < 0:
+            return 256
+
     def rookMoves(self, piece):
-        legalMoves = '0' * 64
-        row = piece // 8
-        col = piece % 8
-        positions = []
-        playingBlack = self.board[piece] == self.board[piece].upper()
+        pass
+        # legalMoves = [0 for row in range(8)]
+        # col = piece % 8
+        # row = piece // 8
+        # playingBlack = self.board[piece] == self.board[piece].upper()
+        # v1, v2, h1, h2 = True, True, True, True
+        # for sq in range(7):
+        #     if v1:
+        #         if row - sq < 0: v
+        #         current = (row - sq) * 8 + col
+        #         row - sq > -1 and \
+        #         (self.board[current] == self.board[(row - sq) * 8 + col].upper()) == playingBlack:
 
-        #up down left right
-        v1, v2, h1, h2 = True, True, True, True
-        for sq in range(7):
-            if v1:
-                if row - sq > -1:
-                    pass
+        # #up down left right
+        # v1, v2, h1, h2 = True, True, True, True
+        # for sq in range(7):
+        #     if v1:
+        #         if row - sq > -1:
+        #             pass
 
 
-        for sq in range(8):
-            if sq != row:
-                playingBlack = self.board[piece] == self.board[piece].upper()
-                positions.append(sq * 8 + col)
-            if sq != col:
-                positions.append(row * 8 + sq)
-        positions.sort()
-        return self.alterString(legalMoves, '1', *positions)
+        # for sq in range(8):
+        #     if sq != row:
+        #         playingBlack = self.board[piece] == self.board[piece].upper()
+        #         positions.append(sq * 8 + col)
+        #     if sq != col:
+        #         positions.append(row * 8 + sq)
+        # positions.sort()
+        # return self.alterString(legalMoves, '1', *positions)
 
 
     def knightMoves(self, piece):
