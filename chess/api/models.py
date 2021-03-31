@@ -23,7 +23,9 @@ class GameBoard(models.Model):
     
     def makeMove(self, move, playerId):
         legalMoves = self.getMoves(move[0], playerId)
-        if legalMoves[move[1]] == '1':
+        row = move[1] // 8
+        col = move[1] % 8
+        if legalMoves[row] & (1 << (7 - col)):
             temp = self.alterString(self.board, '0', move[0])
             self.board = self.alterString(temp, self.board[move[0]], move[1])
             self.whitesTurn = not self.whitesTurn
@@ -40,21 +42,26 @@ class GameBoard(models.Model):
         if myPiece and myTurn:
             return self.movesByPiece[self.board[piece]](self, piece)
         else:
-            return '0' * 64
+            return [0 for row in range(8)]
         
 
     def pawnMoves(self, piece):
-        legalMoves = '0' * 64
+        legalMoves = [0 for row in range(8)]
+        col = piece % 8
+        row = piece // 8
         if self.board[piece] == 'p':
-            if 47 < piece < 56:
-                return self.alterString(legalMoves, '1', piece - 16, piece - 8)
-            else:
-                return self.alterString(legalMoves, '1', piece - 8)
-        if self.board[piece] == 'P':
-            if 7 < piece < 16:
-                return self.alterString(legalMoves, '1', piece + 8, piece + 16)
-            else:
-                return self.alterString(legalMoves, '1', piece + 8)
+            if self.board[piece - 8] == '0':
+                legalMoves[row - 1] = 1 << (7 - col)
+            else: return legalMoves
+            if row == 6 and self.board[piece - 16] == '0':
+                    legalMoves[4] = 1 << (7 - col)
+        else:
+            if self.board[piece + 8] == '0':
+                legalMoves[row + 1] = 1 << (7 - col)
+            else: return legalMoves
+            if row == 1 and self.board[piece + 16] == '0':
+                    legalMoves[3] = 1 << (7 - col)
+        return legalMoves
 
 
     def kingMoves(self, piece):
@@ -93,8 +100,19 @@ class GameBoard(models.Model):
         row = piece // 8
         col = piece % 8
         positions = []
+        playingBlack = self.board[piece] == self.board[piece].upper()
+
+        #up down left right
+        v1, v2, h1, h2 = True, True, True, True
+        for sq in range(7):
+            if v1:
+                if row - sq > -1:
+                    pass
+
+
         for sq in range(8):
             if sq != row:
+                playingBlack = self.board[piece] == self.board[piece].upper()
                 positions.append(sq * 8 + col)
             if sq != col:
                 positions.append(row * 8 + sq)

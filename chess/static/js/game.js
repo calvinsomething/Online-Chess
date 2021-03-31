@@ -17,20 +17,20 @@ socket.onmessage = function(e) {
 
 function legalMoves(data) {
     moves = data['moves'];
+
     if (playerColor === 'B') {
-        var sq = 64;
         for (let row = 0; row < 8; row++)
             for (let col = 0; col < 8; col++) {
-                sq -= 1;
-                if(moves[sq] === '1')
+                if (moves[7 - row] === 0) continue;
+                if (moves[7 - row] & 1 << (col)) 
                     document.getElementById(`${row},${col}`).style.backgroundColor = highlight;
         }
         return;
     }
     for (let row = 0; row < 8; row++)
         for (let col = 0; col < 8; col++) {
-            const sq = row * 8 + col % 8;
-            if(moves[sq] === '1')
+            if (moves[row] === 0) continue;
+            if(moves[row] & 1 << (7 - col))
                     document.getElementById(`${row},${col}`).style.backgroundColor = highlight;
         }
 }
@@ -227,7 +227,7 @@ function pickUpPiece(e) {
 }
 
 function getSquare(squareId) {
-    var square = parseInt(squareId[0]) * 8 + parseInt(squareId[2]) % 8;
+    var square = parseInt(squareId[0]) * 8 + parseInt(squareId[2]);
     if (playerColor === 'B') square = 63 - square;
     return square;
 }
