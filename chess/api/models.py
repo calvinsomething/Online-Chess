@@ -40,6 +40,10 @@ class GameBoard(models.Model):
 
 
     def getMoves(self, piece, playerId):
+        print("**********************************")
+        print(piece)
+        print(self.board[piece])
+        print("**********************************")
         myPiece = (playerId == self.whiteUser.id and self.board[piece] == self.board[piece].lower()) \
             or (playerId == self.blackUser.id and self.board[piece] == self.board[piece].upper())
         myTurn = (self.whitesTurn and playerId == self.whiteUser.id) \
@@ -109,35 +113,39 @@ class GameBoard(models.Model):
             return 256
 
     def rookMoves(self, piece):
-        pass
-        # legalMoves = [0 for row in range(8)]
-        # col = piece % 8
-        # row = piece // 8
-        # playingBlack = self.board[piece] == self.board[piece].upper()
-        # v1, v2, h1, h2 = True, True, True, True
-        # for sq in range(7):
-        #     if v1:
-        #         if row - sq < 0: v
-        #         current = (row - sq) * 8 + col
-        #         row - sq > -1 and \
-        #         (self.board[current] == self.board[(row - sq) * 8 + col].upper()) == playingBlack:
-
-        # #up down left right
-        # v1, v2, h1, h2 = True, True, True, True
-        # for sq in range(7):
-        #     if v1:
-        #         if row - sq > -1:
-        #             pass
-
-
-        # for sq in range(8):
-        #     if sq != row:
-        #         playingBlack = self.board[piece] == self.board[piece].upper()
-        #         positions.append(sq * 8 + col)
-        #     if sq != col:
-        #         positions.append(row * 8 + sq)
-        # positions.sort()
-        # return self.alterString(legalMoves, '1', *positions)
+        legalMoves = [0, 0]
+        col = piece % 8
+        row = piece // 8
+        playingBlack = self.board[piece] == 'R'
+        isEnemy = lambda inPath : (playingBlack and inPath == inPath.lower()) or (not playingBlack and inPath == inPath.upper())
+        v1, v2, h1, h2 = True, True, True, True
+        for sq in range(1, 8):
+            if v1:
+                current = (row - sq) * 8 + col
+                if current > -1 and (self.board[current] == '0' or isEnemy(self.board[current])):
+                    legalMoves = self.toBitset(current, legalMoves)
+                else:
+                    v1 = False
+            if v2:
+                current = (row + sq) * 8 + col
+                if current < 64 and (self.board[current] == '0' or isEnemy(self.board[current])):
+                    legalMoves = self.toBitset(current, legalMoves)
+                else:
+                    v2 = False
+            if h1:
+                current = row * 8 + col - sq
+                if current > row * 8 - 1 and (self.board[current] == '0' or isEnemy(self.board[current])):
+                    legalMoves = self.toBitset(current, legalMoves)
+                else:
+                    h1 = False
+            if h2:
+                current = row * 8 + col + sq
+                if current < (row + 1) * 8 and (self.board[current] == '0' or isEnemy(self.board[current])):
+                    legalMoves = self.toBitset(current, legalMoves)
+                else:
+                    h2 = False
+            if not (v1 or v2 or h1 or h2): break
+        return legalMoves
 
 
     def knightMoves(self, piece):

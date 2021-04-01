@@ -81,7 +81,7 @@ class UserConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         if text_data_json.get('getMoves'):
-            await self.returnMoves(text_data_json['getMoves'])
+            await self.returnMoves(text_data_json['getMoves'] - 1)
         if text_data_json.get('makeMove'):
             await self.makeMove(text_data_json['makeMove'])
 

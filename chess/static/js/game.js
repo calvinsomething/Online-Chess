@@ -129,31 +129,9 @@ function getBoard() {
     })
 }
 
-// function setBoard() {
-//     takenFrom = undefined;
-//     for(let row = 0; row < 8; row++)
-//         for(let col = 0; col < 8; col++) {
-//             switch(row) {
-//                 case 0:
-//                     board[row][col] = 'B' + whiteStart[col];
-//                     break;
-//                 case 7:
-//                     board[row][col] = 'W' + whiteStart[col];
-//                     break;
-//                 case 1:
-//                     board[row][col] = 'BP';
-//                     break;
-//                 case 6:
-//                     board[row][col] = 'WP';
-//             }
-//             draw(document.getElementById(`${row},${col}`), board[row][col]);
-//         }
-//     console.log("setting board");
-// }
-
 function getLegalMoves(squareId) {
     socket.send(JSON.stringify({
-        'getMoves': getSquare(squareId)
+        'getMoves': getSquare(squareId) + 1
     }));
 }
 
