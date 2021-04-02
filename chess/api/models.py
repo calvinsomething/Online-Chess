@@ -20,15 +20,16 @@ class GameBoard(models.Model):
         "rnbqkbnr")
     
     moves = models.TextField(blank=True)
+    # captured = models.CharField(max_length=29, blank=True)
 
     
     def makeMove(self, move, playerId):
         legalMoves = self.getMoves(move[0], playerId)
         moveBitset = self.toBitset(move[1], [0, 0])
-        print("%%%%%%%%%%%%%%%%%%%%%%")
+        print("%%%%%%%%%%M%%%%%%%%%%%%")
         print(legalMoves)
         print(moveBitset)
-        print("%%%%%%%%%%%%%%%%%%%%%%")
+        print("%%%%%%%%%%M%%%%%%%%%%%%")
         for half in range(2):
             if moveBitset[half] & legalMoves[half]:
                 temp = self.alterString(self.board, '0', move[0])
@@ -40,16 +41,13 @@ class GameBoard(models.Model):
 
 
     def getMoves(self, piece, playerId):
-        print("**********************************")
-        print(piece)
-        print(self.board[piece])
-        print("**********************************")
-        myPiece = (playerId == self.whiteUser.id and self.board[piece] == self.board[piece].lower()) \
-            or (playerId == self.blackUser.id and self.board[piece] == self.board[piece].upper())
-        myTurn = (self.whitesTurn and playerId == self.whiteUser.id) \
-            or not (self.whitesTurn or playerId == self.whiteUser.id)
+        playingBlack = playerId == self.blackUser.id
+        myPiece = (not playingBlack and self.board[piece] == self.board[piece].lower()) \
+            or (playingBlack and self.board[piece] == self.board[piece].upper())
+        myTurn = (self.whitesTurn and not playingBlack) \
+            or (not self.whitesTurn and playingBlack)
         if myPiece and myTurn:
-            return self.movesByPiece[self.board[piece]](self, piece)
+            return self.movesByPiece[self.board[piece]](self, piece, playingBlack)
         else:
             return [0, 0]
     
@@ -58,125 +56,101 @@ class GameBoard(models.Model):
         bitset[square // 32] += 1 << (31 - (square % 32))
         return bitset
 
-    def pawnMoves(self, piece):
+    def pawnMoves(self, piece, playingBlack):
         legalMoves = [0, 0]
-        col = piece % 8
-        row = piece // 8
-        if self.board[piece] == 'p':
-            if self.board[piece - 8] == '0':
-                legalMoves = self.toBitset(piece - 8, legalMoves)
-            else: return legalMoves
-            if row == 6 and self.board[piece - 16] == '0':
-                legalMoves = self.toBitset(piece - 16, legalMoves)
+        if playingBlack:
+            if 7 < piece < 16:
+                current = piece + 16
+                if self.board[current] == '0':
+                    legalMoves = self.toBitset(current, legalMoves)
+            current = piece + 8
+            if self.board[current] == '0':
+                legalMoves = self.toBitset(current, legalMoves)
+            current = piece + 7
+            if self.board[current] != '0' and self.board[current] == self.board[current].lower():
+                legalMoves = self.toBitset(current, legalMoves)
+            current = piece + 9
+            if self.board[current] != '0' and self.board[current] == self.board[current].lower():
+                legalMoves = self.toBitset(current, legalMoves)
         else:
-            if self.board[piece + 8] == '0':
-                legalMoves = self.toBitset(piece + 8, legalMoves)
-            else: return legalMoves
-            if row == 1 and self.board[piece + 16] == '0':
-                    legalMoves = self.toBitset(piece + 16, legalMoves)
+            if 47 < piece < 56:
+                current = piece - 16
+                if self.board[current] == '0':
+                    legalMoves = self.toBitset(current, legalMoves)
+            current = piece - 8
+            if self.board[current] == '0':
+                legalMoves = self.toBitset(current, legalMoves)
+            current = piece - 7
+            if self.board[current] != '0' and self.board[current] == self.board[current].upper():
+                legalMoves = self.toBitset(current, legalMoves)
+            current = piece - 9
+            if self.board[current] != '0' and self.board[current] == self.board[current].upper():
+                legalMoves = self.toBitset(current, legalMoves)
         return legalMoves
 
 
-    def kingMoves(self, piece):
-        return self.queenMoves(piece, isKing = True)
+    def kingMoves(self, piece, playingBlack):
+        return self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S', rng=2)
 
 
-    def queenMoves(self, piece, isKing = False):
-        legalMoves = '0' * 64
-        row = piece // 8
-        col = piece % 8
-        positions = []
-        if isKing:
-            rng = 1
-        else:
-            if 7 - row > row:
-                rng = 8 - row
-            else:
-                rng = row + 1
-            if (7 - col > col) and (7 - col > rng):
-                rng = 8 - col
-            elif col > rng:
-                rng = col + 1
-        moves = (1, 7, 8, 9)
-        for dist in range(rng):
-            for move in moves:
-                if move * rng < 64:
-                    positions.append(move * rng)
-                if -(move * rng) > -1:
-                    positions.append(-(move * rng))
-        positions.sort()
-        return self.alterString(legalMoves, '1', *positions)
+    def queenMoves(self, piece, playingBlack):
+        return self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S')
 
 
-    def v1(self, row, col, range):
-        if row - range < 0:
-            return 256
-
-    def rookMoves(self, piece):
+    def directions(self, piece, playingBlack, *args, rng=8):
         legalMoves = [0, 0]
-        col = piece % 8
-        row = piece // 8
-        playingBlack = self.board[piece] == 'R'
-        isEnemy = lambda inPath : (playingBlack and inPath == inPath.lower()) or (not playingBlack and inPath == inPath.upper())
-        v1, v2, h1, h2 = True, True, True, True
-        for sq in range(1, 8):
-            if v1:
-                current = (row - sq) * 8 + col
-                if current > -1 and (self.board[current] == '0' or isEnemy(self.board[current])):
-                    legalMoves = self.toBitset(current, legalMoves)
-                else:
-                    v1 = False
-            if v2:
-                current = (row + sq) * 8 + col
-                if current < 64 and (self.board[current] == '0' or isEnemy(self.board[current])):
-                    legalMoves = self.toBitset(current, legalMoves)
-                else:
-                    v2 = False
-            if h1:
-                current = row * 8 + col - sq
-                if current > row * 8 - 1 and (self.board[current] == '0' or isEnemy(self.board[current])):
-                    legalMoves = self.toBitset(current, legalMoves)
-                else:
-                    h1 = False
-            if h2:
-                current = row * 8 + col + sq
-                if current < (row + 1) * 8 and (self.board[current] == '0' or isEnemy(self.board[current])):
-                    legalMoves = self.toBitset(current, legalMoves)
-                else:
-                    h2 = False
-            if not (v1 or v2 or h1 or h2): break
+        dirs = {
+            'N': (-8, lambda sq : sq > -1),
+            'NW': (-9, lambda sq : sq > -1 and sq % 8 < 7),
+            'NE': (-7, lambda sq : sq > -1 and sq % 8 > 0),
+            'W': (-1, lambda sq : sq % 8 < 7),
+            'E': (1, lambda sq : sq % 8 > 0),
+            'SW': (7, lambda sq : sq < 64 and sq % 8 < 7),
+            'SE':(9, lambda sq : sq < 64 and sq % 8 > 0),
+            'S': (8, lambda sq : sq < 64)
+        }
+        checkSquare = lambda pc, direc, dist : pc + direc * dist
+        canCapture = lambda inPath : (playingBlack and inPath == inPath.lower()) or (not playingBlack and inPath == inPath.upper())
+        
+        for arg in args:
+            for sq in range(1, rng):
+                current = checkSquare(piece, dirs[arg][0], sq)
+                if dirs[arg][1](current):
+                    if self.board[current] == '0':
+                        legalMoves = self.toBitset(current, legalMoves)
+                        continue
+                    if canCapture(self.board[current]):
+                        legalMoves = self.toBitset(current, legalMoves)
+                break
+        return legalMoves
+
+    def rookMoves(self, piece, playingBlack):
+        return self.directions(piece, playingBlack, 'N', 'S', 'W', 'E')
+
+
+    def knightMoves(self, piece, playingBlack):
+        legalMoves = [0, 0]
+        positions = []
+        dirs = ((-17, lambda sq : sq > -1 and sq % 8 < 7),
+            (-15, lambda sq : sq > -1 and sq % 8 > 0),
+            (-10, lambda sq : sq > -1 and sq % 8 < 6),
+            (-6, lambda sq : sq > -1 and sq % 8 > 1),
+            (6, lambda sq : sq < 64 and sq % 8 < 6),
+            (10, lambda sq : sq < 64 and sq % 8 > 1),
+            (15, lambda sq : sq < 64 and sq % 8 < 7),
+            (17, lambda sq : sq < 64 and sq % 8 > 0)
+        )
+        canCapture = lambda inPath : (playingBlack and inPath == inPath.lower()) or (not playingBlack and inPath == inPath.upper())
+        for move in dirs:
+            current = piece + move[0]
+            if move[1](current) and (self.board[current] == '0' or canCapture(self.board[current])):
+                legalMoves = self.toBitset(current, legalMoves)
         return legalMoves
 
 
-    def knightMoves(self, piece):
-        legalMoves = '0' * 64
-        positions = []
-        moves = (6, 10, 15, 17)
-        for move in moves:
-            if piece - move > -1:
-                positions.append(piece - move)
-            if piece + move < 64:
-                positions.append(piece + move)
-        positions.sort()
-        return self.alterString(legalMoves, '1', *positions)
+    def bishopMoves(self, piece, playingBlack):
+        return self.directions(piece, playingBlack, 'NW', 'NE', 'SW', 'SE')        
 
-    def bishopMoves(self, piece):
-        legalMoves = '0' * 64
-        row = piece // 8
-        col = piece % 8
-        positions = []
-        diff = 1
-        while (row - diff > -1) or (row + diff < 8):
-            current = row - diff
-            if current > -1:
-                positions.append(current - diff)
-                positions.append(current + diff)
-            current = row + diff
-            if current < 8:
-                positions.append(current - diff)
-                positions.append(current + diff)
-        positions.sort()
-        return self.alterString(legalMoves, '1', *positions)
 
     def alterString(self, string, value, *positions):
         segments = []
