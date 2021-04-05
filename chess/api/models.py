@@ -20,20 +20,22 @@ class GameBoard(models.Model):
         "rnbqkbnr")
     
     moves = models.TextField(blank=True)
+    enPassant = models.IntegerField(default=-1)
+    castle = models.IntegerField(default=15)
     # captured = models.CharField(max_length=29, blank=True)
 
     
     def makeMove(self, move, playerId):
         legalMoves = self.getMoves(move[0], playerId)
         moveBitset = self.toBitset(move[1], [0, 0])
-        print("%%%%%%%%%%M%%%%%%%%%%%%")
-        print(legalMoves)
-        print(moveBitset)
-        print("%%%%%%%%%%M%%%%%%%%%%%%")
         for half in range(2):
             if moveBitset[half] & legalMoves[half]:
-                temp = self.alterString(self.board, '0', move[0])
-                self.board = self.alterString(temp, self.board[move[0]], move[1])
+                if move[1] == self.enPassant and self.board[move[0]].upper() == 'P':
+                    self.alterBoard(move[1], move[0] + (move[1] % 8 - move[0] % 8))
+                if move[1] - move[0] == 16 and self.board[move[0]] == 'P': self.enPassant = move[0] + 8
+                elif move[0] - move[1] == 16 and self.board[move[0]] == 'p': self.enPassant = move[0] - 8
+                else: self.enPassant = -1
+                self.alterBoard(move[0], move[1])
                 self.whitesTurn = not self.whitesTurn
                 self.save()
                 return True
@@ -69,8 +71,12 @@ class GameBoard(models.Model):
             current = piece + 7
             if self.board[current] != '0' and self.board[current] == self.board[current].lower():
                 legalMoves = self.toBitset(current, legalMoves)
+            elif current == self.enPassant:
+                legalMoves = self.toBitset(current, legalMoves)
             current = piece + 9
             if self.board[current] != '0' and self.board[current] == self.board[current].lower():
+                legalMoves = self.toBitset(current, legalMoves)
+            elif current == self.enPassant:
                 legalMoves = self.toBitset(current, legalMoves)
         else:
             if 47 < piece < 56:
@@ -83,8 +89,12 @@ class GameBoard(models.Model):
             current = piece - 7
             if self.board[current] != '0' and self.board[current] == self.board[current].upper():
                 legalMoves = self.toBitset(current, legalMoves)
+            elif current == self.enPassant:
+                legalMoves = self.toBitset(current, legalMoves)
             current = piece - 9
             if self.board[current] != '0' and self.board[current] == self.board[current].upper():
+                legalMoves = self.toBitset(current, legalMoves)
+            elif current == self.enPassant:
                 legalMoves = self.toBitset(current, legalMoves)
         return legalMoves
 
@@ -152,19 +162,18 @@ class GameBoard(models.Model):
         return self.directions(piece, playingBlack, 'NW', 'NE', 'SW', 'SE')        
 
 
-    def alterString(self, string, value, *positions):
+    def alterBoard(self, piece, move):
         segments = []
-        lastPos = 0
-        for position in positions:
-            if 0 > position > 63:
-                continue
-            segments.append(string[lastPos:position] + value)
-            lastPos = position + 1
-        segments.append(string[lastPos:])
-        newString = ''
-        for segment in segments:
-            newString += segment
-        return newString
+        value = self.board[piece]
+        if move > piece:
+            segments.append(self.board[:piece] + '0')
+            segments.append(self.board[piece + 1:move] + value)
+            segments.append(self.board[move + 1:])
+        else:
+            segments.append(self.board[:move] + value)
+            segments.append(self.board[move + 1:piece] + '0')
+            segments.append(self.board[piece + 1:])
+        self.board = segments[0] + segments[1] + segments[2]
 
     
     movesByPiece = {
