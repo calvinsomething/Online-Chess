@@ -221,6 +221,7 @@ function placePiece(e) {
             'makeMove': [getSquare(takenFrom), getSquare(square.id)]
         }));
     }
+    else draw();
 
     if(inHand) {
         board[square.id[0]][square.id[2]] = inHand;
