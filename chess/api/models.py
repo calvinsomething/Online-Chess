@@ -18,11 +18,33 @@ class GameBoard(models.Model):
         "00000000" + \
         "pppppppp" + \
         "rnbqkbnr")
-    
     moves = models.TextField(blank=True)
     enPassant = models.IntegerField(default=-1)
     castle = models.IntegerField(default=15)
     captured = models.CharField(max_length=29, blank=True)
+    wAttacksBottom = models.IntegerField(default=0)
+    wAttacksTop = models.IntegerField(default=0)
+    bAttacksBottom = models.IntegerField(default=0)
+    bAttacksTop = models.IntegerField(default=0)
+
+
+    def setAttacks(self):
+        wAttacks = [0, 0]
+        bAttacks = [0, 0]
+        for sq in range(64):
+            if self.board[sq] == '0': continue
+            playingBlack = self.board[sq] == self.board[sq].upper()
+            attacks = self.movesByPiece[self.board[sq]](self, sq, playingBlack, attacks=True)
+            if self.board[sq] == self.board[sq].lower():
+                for half in range(2):
+                    wAttacks[half] += attacks[half] - (wAttacks[half] & attacks[half])
+            else:
+                for half in range(2):
+                    bAttacks[half] += attacks[half] - (wAttacks[half] & attacks[half])
+        self.wAttacksTop = wAttacks[0]
+        self.wAttacksBottom = wAttacks[1]
+        self.bAttacksTop = bAttacks[0]
+        self.bAttacksBottom = bAttacks[1]
 
 
     def makeMove(self, move, playerId):
@@ -36,7 +58,8 @@ class GameBoard(models.Model):
                 elif move[0] - move[1] == 16 and self.board[move[0]] == 'p': self.enPassant = move[0] - 8
                 else: self.enPassant = -1
                 self.alterBoard(move[0], move[1])
-                self.checkCheck(move, playerId == self.blackUser.id)
+                self.setAttacks()
+                self.checkCheck(playerId == self.blackUser.id)
                 self.whitesTurn = not self.whitesTurn
                 self.save()
                 return True
@@ -79,39 +102,17 @@ class GameBoard(models.Model):
         return [4294967295, 4294967295]
 
     
-    def checkCheck(self, move, playingBlack):
+    def checkCheck(self, playingBlack):
         if playingBlack:
-            eKing = self.board.find('k')
+            eKing = self.toBitset(self.board.find('k'), [0, 0])
+            eAttacks = [self.wAttacksTop, self.wAttacksBottom]
         else:
-            eKing = self.board.find('K')
-        dirs = {
-            'N': (lambda sq : (eKing - sq) % 8 == 0 and sq < eKing),
-            'NW': (lambda sq : (eKing - sq) % 9 == 0 and sq < eKing and sq % 8 < eKing % 8),
-            'NE': (lambda sq : (eKing - sq) % 7 == 0 and sq < eKing and sq % 8 > eKing % 8),
-            'W': (lambda sq : eKing // 8 == sq // 8 and sq < eKing),
-            'E': (lambda sq : eKing // 8 == sq // 8 and sq > eKing),
-            'SW': (lambda sq : (eKing - sq) % 7 == 0 and sq > eKing and sq % 8 < eKing % 8),
-            'SE': (lambda sq : (eKing - sq) % 9 == 0 and sq > eKing and sq % 8 > eKing % 8),
-            'S': (lambda sq : (eKing - sq) % 8 == 0 and sq > eKing)
-        }
-        for direc in dirs:
-            if (dirs[direc](move[0]) or dirs[direc](move[1])) and \
-                self.directions(eKing, not playingBlack, direc, checkThreats=True, directCheck=True) != [4294967295, 4294967295]:
+            eKing = self.toBitset(self.board.find('K'), [0, 0])
+            eAttacks = [self.bAttacksTop, self.bAttacksBottom]
+
+        for iHalf, xHalf in eKing, eAttacks:
+            if iHalf & xHalf:
                 self.check = True
-                return
-        if self.board[move[1]].upper() == 'P':
-            if (playingBlack and (eKing == move[1] + 7 or move[1] + 9) and \
-                eKing // 8 == move[1] // 8 + 1) \
-                or \
-                (not playingBlack and (eKing == move[1] - 7 or move[1] - 9) and \
-                eKing // 8 == move[1] // 8 - 1):
-                self.check = True
-        elif self.board[move[1]].upper() == 'N':
-            nMoves = self.knightMoves(move[1], playingBlack)
-            eKingPos = self.toBitset(eKing, [0, 0])
-            for half in range(2):
-                if nMoves[half] & eKingPos[half]:
-                    self.check = True
 
 
     def toBitset(self, square, bitset):
@@ -119,63 +120,54 @@ class GameBoard(models.Model):
         return bitset
 
 
-    def pawnMoves(self, piece, playingBlack):
+    def pawnMoves(self, piece, playingBlack, attacks=False):
         legalMoves = [0, 0]
         if playingBlack:
-            if 7 < piece < 16:
-                current = piece + 16
-                if self.board[current] == '0':
-                    legalMoves = self.toBitset(current, legalMoves)
-            current = piece + 8
-            if self.board[current] == '0':
-                legalMoves = self.toBitset(current, legalMoves)
-            current = piece + 7
-            if self.board[current] != '0' and self.board[current] == self.board[current].lower():
-                legalMoves = self.toBitset(current, legalMoves)
-            elif current == self.enPassant:
-                legalMoves = self.toBitset(current, legalMoves)
-            current = piece + 9
-            if self.board[current] != '0' and self.board[current] == self.board[current].lower():
-                legalMoves = self.toBitset(current, legalMoves)
-            elif current == self.enPassant:
-                legalMoves = self.toBitset(current, legalMoves)
+            forward = 8
+            iAttacks = (7, 9)
         else:
-            if 47 < piece < 56:
-                current = piece - 16
-                if self.board[current] == '0':
-                    legalMoves = self.toBitset(current, legalMoves)
-            current = piece - 8
-            if self.board[current] == '0':
-                legalMoves = self.toBitset(current, legalMoves)
-            current = piece - 7
-            if self.board[current] != '0' and self.board[current] == self.board[current].upper():
-                legalMoves = self.toBitset(current, legalMoves)
-            elif current == self.enPassant:
-                legalMoves = self.toBitset(current, legalMoves)
-            current = piece - 9
-            if self.board[current] != '0' and self.board[current] == self.board[current].upper():
-                legalMoves = self.toBitset(current, legalMoves)
-            elif current == self.enPassant:
-                legalMoves = self.toBitset(current, legalMoves)
+            forward = -8
+            iAttacks = (-7, -9)
+        canCapture = lambda inPath : (playingBlack and inPath == inPath.lower()) or (not playingBlack and inPath == inPath.upper())
+        for attack in iAttacks:
+            if (piece + attack) // 8 != (piece + forward) // 8 or \
+                0 > piece + attack > 63: continue
+            if attacks or (
+                self.board[piece + attack] != '0' and (
+                (self.board[piece + attack] == self.board[piece + attack].upper()) != playingBlack or \
+                piece + attack == self.enPassant)):
+                legalMoves = self.toBitset(piece + attack, legalMoves)
+  
+        if not attacks and self.board[piece + forward] == '0':
+            legalMoves = self.toBitset(piece + forward, legalMoves)
+            if playingBlack and 7 < piece < 16 and self.board[piece + forward * 2] == '0':
+                legalMoves = self.toBitset(piece + forward * 2, legalMoves)
+            elif not playingBlack and 47 < piece < 56 and self.board[piece + forward * 2] == '0':
+                legalMoves = self.toBitset(piece + forward * 2, legalMoves)
         return legalMoves
 
 
-    def kingMoves(self, piece, playingBlack):
-        return self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S', rng=2)
+    def kingMoves(self, piece, playingBlack, attacks=False):
+        moves = self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S', rng=2, attacks=attacks)
+        if playingBlack:
+            eAttacks = [self.wAttacksTop, self.wAttacksBottom]
+        else:
+            eAttacks = [self.bAttacksTop, self.bAttacksBottom]
+        return [moves[half] - (eAttacks[half] & moves[half]) for half in range(2)]
 
 
-    def queenMoves(self, piece, playingBlack):
-        return self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S')
+    def queenMoves(self, piece, playingBlack, attacks=False):
+        return self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S', attacks=attacks)
 
 
-    def directions(self, piece, playingBlack, *args, rng=8, checkThreats=False, directCheck=False):
+    def directions(self, piece, playingBlack, *args, rng=8, checkThreats=False, attacks=False):
         legalMoves = [0, 0]
         dirs = {
             'N': (-8, lambda sq : sq > -1, ('Q', 'R')),
             'NW': (-9, lambda sq : sq > -1 and sq % 8 < 7, ('Q', 'B')),
             'NE': (-7, lambda sq : sq > -1 and sq % 8 > 0, ('Q', 'B')),
-            'W': (-1, lambda sq : sq % 8 < 7, ('Q', 'R')),
-            'E': (1, lambda sq : sq % 8 > 0, ('Q', 'R')),
+            'W': (-1, lambda sq : sq % 8 < piece % 8, ('Q', 'R')),
+            'E': (1, lambda sq : sq % 8 > piece % 8, ('Q', 'R')),
             'SW': (7, lambda sq : sq < 64 and sq % 8 < 7, ('Q', 'B')),
             'SE':(9, lambda sq : sq < 64 and sq % 8 > 0, ('Q', 'B')),
             'S': (8, lambda sq : sq < 64, ('Q', 'R'))
@@ -190,28 +182,26 @@ class GameBoard(models.Model):
                     if self.board[current] == '0':
                         legalMoves = self.toBitset(current, legalMoves)
                         continue
-                    if canCapture(self.board[current]):
+                    elif canCapture(self.board[current]):
                         legalMoves = self.toBitset(current, legalMoves)
+                        if checkThreats and self.board[current].upper() in dirs[arg][2]:
+                            return legalMoves
+                    else:
+                        if attacks:
+                            legalMoves = self.toBitset(current, legalMoves)
                         if checkThreats:
-                            if self.board[current].upper() in dirs[arg][2]:
-                                return legalMoves
-                            else:
-                                break
-                    elif checkThreats:
-                        blockers += 1
-                        if blockers > 1: break
-                        if blockers == 1 and directCheck: break
-                        continue
+                            blockers += 1
+                            if blockers < 2: continue
                 break
         if checkThreats: return [4294967295, 4294967295]
         return legalMoves
 
 
-    def rookMoves(self, piece, playingBlack):
-        return self.directions(piece, playingBlack, 'N', 'S', 'W', 'E')
+    def rookMoves(self, piece, playingBlack, attacks=False):
+        return self.directions(piece, playingBlack, 'N', 'S', 'W', 'E', attacks=attacks)
 
 
-    def knightMoves(self, piece, playingBlack):
+    def knightMoves(self, piece, playingBlack, attacks=False):
         legalMoves = [0, 0]
         positions = []
         dirs = ((-17, lambda sq : sq > -1 and sq % 8 < 7),
@@ -231,8 +221,8 @@ class GameBoard(models.Model):
         return legalMoves
 
 
-    def bishopMoves(self, piece, playingBlack):
-        return self.directions(piece, playingBlack, 'NW', 'NE', 'SW', 'SE')        
+    def bishopMoves(self, piece, playingBlack, attacks=False):
+        return self.directions(piece, playingBlack, 'NW', 'NE', 'SW', 'SE', attacks=attacks)        
 
 
     def alterBoard(self, piece, move):
