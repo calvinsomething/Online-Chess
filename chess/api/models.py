@@ -9,6 +9,7 @@ class GameBoard(models.Model):
     timeStarted = models.DateTimeField(default=timezone.now)
     whitesTurn = models.BooleanField(default=True)
     check = models.BooleanField(default=False)
+    winner = models.CharField(max_length=1, default=0)
     board = models.CharField(max_length=64, default=\
         "RNBQKBNR" + \
         "PPPPPPPP" + \
@@ -21,7 +22,7 @@ class GameBoard(models.Model):
     moves = models.TextField(blank=True)
     enPassant = models.IntegerField(default=-1)
     castle = models.IntegerField(default=15)
-    captured = models.CharField(max_length=29, blank=True)
+    captured = models.CharField(max_length=30, blank=True)
     wAttacksTop = models.IntegerField(default=0)
     wAttacksBottom = models.IntegerField(default=0)
     bAttacksTop = models.IntegerField(default=0)
@@ -63,9 +64,30 @@ class GameBoard(models.Model):
                 self.alterBoard(move[0], move[1])
                 self.setAttacks()
                 self.whitesTurn = not self.whitesTurn
+                self.isGameOver(playerId)
                 self.save()
                 return True
         return False
+
+
+    def isGameOver(self, playerId):
+        if playerId == self.blackUser.id:
+            playingBlack = True
+            opponentId = self.whiteUser.id
+        else:
+            playingBlack = False
+            opponentId = self.blackUser.id
+        for sq in range(64):
+            if self.board[sq] == '0': continue
+            if (self.board[sq] == self.board[sq].upper()) != playingBlack:
+                if self.getMoves(sq, opponentId) != [0, 0]:
+                    return
+        if not self.check:
+            self.winner = 'D'
+        elif playingBlack:
+            self.winner = 'B'
+        else:
+            self.winner = 'W'
 
 
     def getMoves(self, piece, playerId):
@@ -136,7 +158,7 @@ class GameBoard(models.Model):
                 piece + attack == self.enPassant)):
                 legalMoves = self.toBitset(piece + attack, legalMoves)
   
-        if not attacks and self.board[piece + forward] == '0':
+        if not attacks and -1 < piece + forward < 64 and self.board[piece + forward] == '0':
             legalMoves = self.toBitset(piece + forward, legalMoves)
             if playingBlack and 7 < piece < 16 and self.board[piece + forward * 2] == '0':
                 legalMoves = self.toBitset(piece + forward * 2, legalMoves)

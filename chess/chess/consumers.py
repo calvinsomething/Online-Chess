@@ -28,6 +28,10 @@ class UserConsumer(AsyncWebsocketConsumer):
         return GameBoard.objects.get(id=self.game_id)
 
     @database_sync_to_async
+    def getWinner(self, game):
+        return game.winner
+
+    @database_sync_to_async
     def myTurn(self):
         game = GameBoard.objects.get(id=self.game_id)
         myTurn = (game.whitesTurn and self.scope['user'].id == game.whiteUser.id)\
@@ -64,12 +68,15 @@ class UserConsumer(AsyncWebsocketConsumer):
     async def updateBoard(self, *args):
         game = await self.getBoard()
         blackId = await self.getBlackId(game)
+        winner = await self.getWinner(game)
         data = {
             'board': game.board
         }
         if self.scope['user'].id == blackId:
             data['playingBlack'] = 'True'
-        if await self.myTurn():
+        if winner != '0':
+            data['winner'] = winner
+        elif await self.myTurn():
             data['myTurn'] = 'True'
         await self.send(text_data=json.dumps(data))
 

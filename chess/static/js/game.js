@@ -144,6 +144,21 @@ function translate(piece) {
 
 function updateBoard(data) {
     official = data['board'];
+    const winner = data['winner'];
+    if (winner) {
+        var msg;
+        switch (winner) {
+            case 'W':
+                var msg = "Game Over. White wins.";
+                break
+            case 'B':
+                var msg = "Game Over. Black wins.";
+                break
+            case 'D':
+                var msg = "Game Over. Draw.";
+        }
+        window.alert(msg);
+    }
     if (data['myTurn'] === 'True') myTurn = true;
     else myTurn = false;
     if (data['playingBlack']) {
