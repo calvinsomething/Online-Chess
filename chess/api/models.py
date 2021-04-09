@@ -22,15 +22,18 @@ class GameBoard(models.Model):
     enPassant = models.IntegerField(default=-1)
     castle = models.IntegerField(default=15)
     captured = models.CharField(max_length=29, blank=True)
-    wAttacksBottom = models.IntegerField(default=0)
     wAttacksTop = models.IntegerField(default=0)
-    bAttacksBottom = models.IntegerField(default=0)
+    wAttacksBottom = models.IntegerField(default=0)
     bAttacksTop = models.IntegerField(default=0)
+    bAttacksBottom = models.IntegerField(default=0)
+    kAttacker1 = models.IntegerField(default=-1)
+    kAttacker2 = models.IntegerField(default=-1)
 
 
     def setAttacks(self):
         wAttacks = [0, 0]
         bAttacks = [0, 0]
+        self.kAttacker1, self.kAttacker2 = -1, -1
         for sq in range(64):
             if self.board[sq] == '0': continue
             playingBlack = self.board[sq] == self.board[sq].upper()
@@ -59,7 +62,6 @@ class GameBoard(models.Model):
                 else: self.enPassant = -1
                 self.alterBoard(move[0], move[1])
                 self.setAttacks()
-                self.checkCheck(playerId == self.blackUser.id)
                 self.whitesTurn = not self.whitesTurn
                 self.save()
                 return True
@@ -75,12 +77,21 @@ class GameBoard(models.Model):
         if myPiece and myTurn:
             return [self.protectingKing(piece, playingBlack)[half] \
                 & self.movesByPiece[self.board[piece]](self, piece, playingBlack)[half] \
+                & self.inCheck(piece, playingBlack)[half] \
                 for half in range(2)]
         else:
             return [0, 0]
 
 
+    def inCheck(self, piece, playingBlack):
+        if not self.check or self.board[piece].upper() == 'K': return [4294967295, 4294967295]
+        if self.kAttacker1 > -1 and self.kAttacker2 > -1:
+            return [0, 0]
+        return self.protectingKing(self.kAttacker1, playingBlack)
+
+
     def protectingKing(self, piece, playingBlack):
+        if self.board[piece].upper() == 'K': return [4294967295, 4294967295]
         if playingBlack:
             iKing = self.board.find('K')
         else:
@@ -96,23 +107,10 @@ class GameBoard(models.Model):
             'S': ((iKing - piece) % 8 == 0 and piece > iKing)
         }
         
-        for direc in dirs:
-            if dirs[direc]:
-                return self.directions(iKing, playingBlack, direc, checkThreats=True)
+        for direction in dirs:
+            if dirs[direction]:
+                return self.directions(iKing, playingBlack, direction, checkThreats=True)
         return [4294967295, 4294967295]
-
-    
-    def checkCheck(self, playingBlack):
-        if playingBlack:
-            eKing = self.toBitset(self.board.find('k'), [0, 0])
-            eAttacks = [self.wAttacksTop, self.wAttacksBottom]
-        else:
-            eKing = self.toBitset(self.board.find('K'), [0, 0])
-            eAttacks = [self.bAttacksTop, self.bAttacksBottom]
-
-        for iHalf, xHalf in eKing, eAttacks:
-            if iHalf & xHalf:
-                self.check = True
 
 
     def toBitset(self, square, bitset):
@@ -159,6 +157,31 @@ class GameBoard(models.Model):
     def queenMoves(self, piece, playingBlack, attacks=False):
         return self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S', attacks=attacks)
 
+    # def scan(self, square, playingBlack, direction, attacks=False):
+    #     bitset = [0, 0]
+    #     dirs = {
+    #         'N': (-8, lambda sq : sq > -1),
+    #         'NW': (-9, lambda sq : sq > -1 and sq % 8 < 7),
+    #         'NE': (-7, lambda sq : sq > -1 and sq % 8 > 0),
+    #         'W': (-1, lambda sq : sq % 8 < piece % 8),
+    #         'E': (1, lambda sq : sq % 8 > piece % 8),
+    #         'SW': (7, lambda sq : sq < 64 and sq % 8 < 7),
+    #         'SE':(9, lambda sq : sq < 64 and sq % 8 > 0),
+    #         'S': (8, lambda sq : sq < 64)
+    #     }
+    #     for distance in range(1, 8):
+    #         current = square + dirs[direction][0] * distance
+    #         if dirs[direction][1](current):
+    #             if self.board[current] == '0':
+    #                 bitset = self.toBitset(current, bitset)
+    #                 continue
+    #             if (playingBlack and self.board[current] == self.board[current].lower()) \
+    #                 or (not playingBlack and self.board[current] == self.board[current].upper()):
+    #                 bitset = self.toBitset(current, bitset)
+    #             elif attacks:
+    #                 bitset = self.toBitset(currnt, bitset)
+    #         return bitset
+
 
     def directions(self, piece, playingBlack, *args, rng=8, checkThreats=False, attacks=False):
         legalMoves = [0, 0]
@@ -172,12 +195,12 @@ class GameBoard(models.Model):
             'SE':(9, lambda sq : sq < 64 and sq % 8 > 0, ('Q', 'B')),
             'S': (8, lambda sq : sq < 64, ('Q', 'R'))
         }
-        checkSquare = lambda pc, direc, dist : pc + direc * dist
+        checkSquare = lambda direc, dist : piece + direc * dist
         canCapture = lambda inPath : (playingBlack and inPath == inPath.lower()) or (not playingBlack and inPath == inPath.upper())
         blockers = 0
         for arg in args:
             for sq in range(1, rng):
-                current = checkSquare(piece, dirs[arg][0], sq)
+                current = checkSquare(dirs[arg][0], sq)
                 if dirs[arg][1](current):
                     if self.board[current] == '0':
                         legalMoves = self.toBitset(current, legalMoves)
@@ -186,10 +209,15 @@ class GameBoard(models.Model):
                         legalMoves = self.toBitset(current, legalMoves)
                         if checkThreats and self.board[current].upper() in dirs[arg][2]:
                             return legalMoves
+                        if attacks and self.board[current].upper() == 'K':
+                            if self.kAttacker1 == -1: self.kAttacker1 = piece
+                            else: self.kAttacker2 = piece
+                            self.check = True
+                            continue
                     else:
                         if attacks:
                             legalMoves = self.toBitset(current, legalMoves)
-                        if checkThreats:
+                        elif checkThreats:
                             blockers += 1
                             if blockers < 2: continue
                 break
