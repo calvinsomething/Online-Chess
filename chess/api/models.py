@@ -35,6 +35,7 @@ class GameBoard(models.Model):
         wAttacks = [0, 0]
         bAttacks = [0, 0]
         self.kAttacker1, self.kAttacker2 = -1, -1
+        self.check = False
         for sq in range(64):
             if self.board[sq] == '0': continue
             playingBlack = self.board[sq] == self.board[sq].upper()
@@ -61,6 +62,7 @@ class GameBoard(models.Model):
                 if move[1] - move[0] == 16 and self.board[move[0]] == 'P': self.enPassant = move[0] + 8
                 elif move[0] - move[1] == 16 and self.board[move[0]] == 'p': self.enPassant = move[0] - 8
                 else: self.enPassant = -1
+                self.checkCastle(move[0])
                 self.alterBoard(move[0], move[1])
                 self.setAttacks()
                 self.whitesTurn = not self.whitesTurn
@@ -68,6 +70,22 @@ class GameBoard(models.Model):
                 self.save()
                 return True
         return False
+
+
+    def checkCastle(self, piece):
+        if self.castle == 0: pass
+        elif piece == 0 and self.castle & 8:
+            self.castle -= 8
+        elif piece == 7 and self.castle & 4:
+            self.castle -= 4
+        elif piece == 56 and self.castle & 2:
+            self.castle -= 2
+        elif piece == 63 and self.castle & 1:
+            self.castle -= 1
+        elif piece == 4 and (self.castle & 8 or self.castle & 4):
+            self.castle -= (8 & self.castle) + (4 & self.castle)
+        elif piece == 60 and (self.castle & 2 or self.castle & 1):
+            self.castle -= (2 & self.castle) + (1 & self.castle)
 
 
     def isGameOver(self, playerId):
@@ -92,15 +110,13 @@ class GameBoard(models.Model):
 
     def getMoves(self, piece, playerId):
         playingBlack = playerId == self.blackUser.id
-        myPiece = (not playingBlack and self.board[piece] == self.board[piece].lower()) \
-            or (playingBlack and self.board[piece] == self.board[piece].upper())
-        myTurn = (self.whitesTurn and not playingBlack) \
-            or (not self.whitesTurn and playingBlack)
+        myPiece = playingBlack == (self.board[piece] == self.board[piece].upper())
+        myTurn = self.whitesTurn != playingBlack
         if myPiece and myTurn:
-            return [self.protectingKing(piece, playingBlack)[half] \
-                & self.movesByPiece[self.board[piece]](self, piece, playingBlack)[half] \
-                & self.inCheck(piece, playingBlack)[half] \
-                for half in range(2)]
+            protectingKing = self.protectingKing(piece, playingBlack)
+            moves = self.movesByPiece[self.board[piece]](self, piece, playingBlack)
+            inCheck = self.inCheck(piece, playingBlack)
+            return [protectingKing[half] & moves[half] & inCheck[half] for half in range(2)]
         else:
             return [0, 0]
 
@@ -167,13 +183,72 @@ class GameBoard(models.Model):
         return legalMoves
 
 
+    def castleMoves(self, playingBlack):
+        bitset = [0, 0]
+        if self.check: return bitset
+        castleRight = True
+        castleLeft = True
+        if playingBlack:
+            if self.castle & 8:
+                for sq in [1, 2, 3]:
+                    if self.board[sq] != '0':
+                        castleRight = False
+                        break
+                for sq in [0, 1, 2, 3]:
+                    if self.toBitset(sq, [0, 0])[0] & self.wAttacksTop:
+                        castleRight = False
+                        break
+            else: castleRight = False        
+            if self.castle & 4:
+                for sq in [5, 6]:
+                    if self.board[sq] != '0':
+                        castleLeft = False
+                        break
+                for sq in [5, 6, 7]:
+                    if self.toBitset(sq, [0, 0])[0] & self.wAttacksTop:
+                        castleLeft = False
+                        break
+            else: castleLeft = False
+            if castleRight:
+                bitset = self.toBitset(2, bitset)
+            if castleLeft:
+                bitset = self.toBitset(6, bitset)
+        else:
+            if self.castle & 2:
+                for sq in [57, 58, 59]:
+                    if self.board[sq] != '0':
+                        castleLeft = False
+                        break
+                for sq in [56, 57, 58, 59]:
+                    if self.toBitset(sq, [0, 0])[0] & self.bAttacksBottom:
+                        castleLeft = False
+                        break
+            else: castleLeft = False
+            if self.castle & 1:
+                for sq in [61, 62]:
+                    if self.board[sq] != '0':
+                        castleRight = False
+                        break
+                for sq in [61, 62, 63]:
+                    if self.toBitset(sq, [0, 0])[0] & self.bAttacksBottom:
+                        castleRight = False
+                        break
+            else: castleRight = False
+            if castleLeft:
+                bitset = self.toBitset(58, bitset)
+            if castleRight:
+                bitset = self.toBitset(62, bitset)
+        return bitset
+
+
     def kingMoves(self, piece, playingBlack, attacks=False):
         moves = self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S', rng=2, attacks=attacks)
+        castleMoves = self.castleMoves(playingBlack)
         if playingBlack:
             eAttacks = [self.wAttacksTop, self.wAttacksBottom]
         else:
             eAttacks = [self.bAttacksTop, self.bAttacksBottom]
-        return [moves[half] - (eAttacks[half] & moves[half]) for half in range(2)]
+        return [(moves[half] + castleMoves[half]) - (eAttacks[half] & moves[half]) for half in range(2)]
 
 
     def queenMoves(self, piece, playingBlack, attacks=False):
@@ -235,6 +310,9 @@ class GameBoard(models.Model):
                             if self.kAttacker1 == -1: self.kAttacker1 = piece
                             else: self.kAttacker2 = piece
                             self.check = True
+                            print("&&&&&&&&&&&&&&&&&&&&&&&& CHECK &&&&&&&&&&&&&&&&&&&&&&&")
+                            print(current)
+                            print(piece)
                             continue
                     else:
                         if attacks:
@@ -266,8 +344,11 @@ class GameBoard(models.Model):
         canCapture = lambda inPath : (playingBlack and inPath == inPath.lower()) or (not playingBlack and inPath == inPath.upper())
         for move in dirs:
             current = piece + move[0]
-            if move[1](current) and (self.board[current] == '0' or canCapture(self.board[current])):
-                legalMoves = self.toBitset(current, legalMoves)
+            if move[1](current):
+                if (self.board[current] == '0' or canCapture(self.board[current])):
+                    legalMoves = self.toBitset(current, legalMoves)
+                elif attacks:
+                    legalMoves = self.toBitset(current, legalMoves)
         return legalMoves
 
 
@@ -275,9 +356,22 @@ class GameBoard(models.Model):
         return self.directions(piece, playingBlack, 'NW', 'NE', 'SW', 'SE', attacks=attacks)        
 
 
+    def makeCastleMove(self, move):
+        if move == 2:
+            self.alterBoard(0, 3)
+        elif move == 6:
+            self.alterBoard(7, 5)
+        elif move == 58:
+            self.alterBoard(56, 59)
+        elif move == 62:
+            self.alterBoard(63, 61)
+
+
     def alterBoard(self, piece, move):
         segments = []
         value = self.board[piece]
+        if (piece == 4 and value == 'K') or (piece == 60 and value == 'k'):
+            self.makeCastleMove(move)
         if self.board[move] != '0':
             self.captured += self.board[move]
         if move > piece:
