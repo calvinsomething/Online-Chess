@@ -12,6 +12,7 @@ socket.onmessage = function(e) {
     if (data['challenger']) challenges(data);
     if (data['board']) updateBoard(data);
     if (data['moves']) legalMoves(data);
+    if (data['promote']) promote(data);
     console.log(data);
 };
 
@@ -34,6 +35,17 @@ function legalMoves(data) {
             }
         }
     }
+}
+
+//Temporary until I can build in the promotion options into the side pannel
+function promote(data) {
+    var promotion = '0';
+    while (!(promotion.toUpperCase() === 'Q' || promotion.toUpperCase() === 'B'
+        || promotion.toUpperCase() === 'N' || promotion.toUpperCase() === 'R'))
+        promotion = window.prompt("Enter 'Q', 'B', 'N', or 'R' to choose your promotion.", "Enter Letter: ");
+    socket.send(JSON.stringify({
+        'promotion': promotion
+    }));
 }
 
 function clearHighlights() {

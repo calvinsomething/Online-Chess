@@ -5,6 +5,7 @@ from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
+
 class UserConsumer(AsyncWebsocketConsumer):
     game_id = 0
     opponent_id = 0
@@ -48,6 +49,20 @@ class UserConsumer(AsyncWebsocketConsumer):
         return game.getMoves(piece, self.scope['user'].id)
 
     @database_sync_to_async
+    def choosePromotion(self, promotion, playerId):
+        game = GameBoard.objects.get(id=self.game_id)
+        if playerId == game.whiteUser.id and 'p' in game.board[:8]:
+            game.promote(promotion, playerId)
+        elif playerId == game.blackUser.id and 'P' in game.board[56:]:
+            game.promote(promotion, playerId)
+        async_to_sync(self.updateBoard)()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "user%s" % self.opponent_id,
+            {"type": "updateBoard"}
+        )
+
+    @database_sync_to_async
     def makeMove(self, move):
         game = GameBoard.objects.get(id=self.game_id)
         if game.makeMove(move, self.scope['user'].id):
@@ -57,6 +72,12 @@ class UserConsumer(AsyncWebsocketConsumer):
                 "user%s" % self.opponent_id,
                 {"type": "updateBoard"}
             )
+
+    async def promote(self, event):
+        text_data = {
+            'promote': 'True'
+        }
+        await self.send(text_data=json.dumps(text_data))
 
     async def returnMoves(self, piece):
         moves = await self.getMoves(piece)
@@ -91,6 +112,8 @@ class UserConsumer(AsyncWebsocketConsumer):
             await self.returnMoves(text_data_json['getMoves'] - 1)
         if text_data_json.get('makeMove'):
             await self.makeMove(text_data_json['makeMove'])
+        if text_data_json.get('promotion'):
+            await self.choosePromotion(text_data_json['promotion'], self.scope['user'].id)
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
