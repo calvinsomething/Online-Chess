@@ -241,7 +241,7 @@ class GameBoard(models.Model):
                         castleLeft = False
                         break
                 for sq in [56, 57, 58, 59]:
-                    if self.toBitset(sq, [0, 0])[0] & self.bAttacksBottom:
+                    if self.toBitset(sq, [0, 0])[1] & self.bAttacksBottom:
                         castleLeft = False
                         break
             else: castleLeft = False
@@ -251,7 +251,7 @@ class GameBoard(models.Model):
                         castleRight = False
                         break
                 for sq in [61, 62, 63]:
-                    if self.toBitset(sq, [0, 0])[0] & self.bAttacksBottom:
+                    if self.toBitset(sq, [0, 0])[1] & self.bAttacksBottom:
                         castleRight = False
                         break
             else: castleRight = False

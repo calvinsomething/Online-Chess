@@ -240,21 +240,19 @@ function getSquare(squareId) {
 
 function placePiece(e) {
     if (!inHand) return;
-    document.getElementById("board").style.cursor = "default";
-    var square = e.target;
+    const square = e.target;
     console.log("Placed piece on " + square.id);
     if (square.style.backgroundColor === highlight) {
         socket.send(JSON.stringify({
             'makeMove': [getSquare(takenFrom), getSquare(square.id)]
         }));
+    } else {
+        board[parseInt(takenFrom[0])][parseInt(takenFrom[1])] = inHand;
+        draw();
     }
-    else draw();
-
-    if(inHand) {
-        board[square.id[0]][square.id[2]] = inHand;
-        inHand = '';
-        clearHighlights();
-    }
+    document.getElementById("board").style.cursor = "default";
+    inHand = '';
+    clearHighlights();
 }
 
 function getWinSize() {
