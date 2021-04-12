@@ -17,8 +17,7 @@ socket.onmessage = function(e) {
 };
 
 function legalMoves(data) {
-    moves = data['moves'];
-
+    const moves = data['moves'];
     for (let half = 0; half < 2; half++) {
         console.log(moves[half]);
         if (moves[half] === 0) continue;
@@ -31,7 +30,9 @@ function legalMoves(data) {
                     row = 7 - row;
                     col = 7 - col;
                 }
-                document.getElementById(`${row},${col}`).style.backgroundColor = highlight;
+                const square = document.getElementById(`${row},${col}`);
+                square.classList.add('legal');
+                square.style.backgroundColor = highlight;
             }
         }
     }
@@ -49,10 +50,11 @@ function promote(data) {
 }
 
 function clearHighlights() {
-    for (let row = 0; row < 8; row++)
-        for (let col = 0; col < 8; col++) {
-            document.getElementById(`${row},${col}`).style.backgroundColor = null;
-        }
+    const elements = document.getElementsByClassName('legal');
+    while (elements.length) {
+        elements[0].style.backgroundColor = null;
+        elements[0].classList.remove('legal');
+    }
 }
 
 function challenges(data) {
@@ -207,6 +209,7 @@ function draw() {
             else
                 square.style.backgroundImage = null;
         }
+    clearHighlights();
 }
 
 function pickUpPiece(e) {
@@ -242,7 +245,8 @@ function placePiece(e) {
     if (!inHand) return;
     const square = e.target;
     console.log("Placed piece on " + square.id);
-    if (square.style.backgroundColor === highlight) {
+    console.log(square.classList);
+    if (square.classList.contains("legal")) {
         socket.send(JSON.stringify({
             'makeMove': [getSquare(takenFrom), getSquare(square.id)]
         }));
@@ -252,7 +256,6 @@ function placePiece(e) {
     }
     document.getElementById("board").style.cursor = "default";
     inHand = '';
-    clearHighlights();
 }
 
 function getWinSize() {
@@ -264,11 +267,6 @@ function getWinSize() {
     return [width, height];
 }
 
-function Square() {
-
-}
-
-
 let board = [];
 for(let row = 0; row < 8; row++)
     board[row] = [];
@@ -276,11 +274,3 @@ let playerColor;
 let takenFrom;
 let inHand;
 let myTurn = false;
-
-// const whiteStart = [
-//     'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'
-// ];
-
-//document.onload = setBoard();
-//newGame();
-//getBoard();
