@@ -11,6 +11,7 @@ djangorestframework = "*"
 django-rest-auth = "*"
 channels-redis = "*"
 django-redis = "*"
+gunicorn = "*"
 
 [dev-packages]
 
