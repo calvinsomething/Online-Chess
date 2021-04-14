@@ -7,8 +7,8 @@ services:
         volumes:
             - .:/Online-Chess
         ports:
-            - "8000:8000"
-        command: python3 chess/manage.py runserver 0.0.0.0:8000
+            - "80:8000"
+        command: gunicorn -b :8000 --workers 3 --pythonpath ./chess chess.wsgi
         links:
             - redis
 
