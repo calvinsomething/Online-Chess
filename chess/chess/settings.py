@@ -25,7 +25,7 @@ SECRET_KEY = '8kelpl0s@!8-0l))x7(1sz+xhoqhyks3o329!=qvq9j&v(pk&5'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -80,7 +80,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [('online-chess_redis_1', 6379)],
         },
     },
 }
