@@ -1,0 +1,41 @@
+userNoneuserNoneuserNoneuserNoneuserNoneuserNone
+
+type : websocket
+path : /ws/user/
+raw_path : b'/ws/user/'
+headers : [
+    (b'x-forwarded-for', b'172.20.0.1'), 
+    (b'host', b'localhost'), 
+    (b'upgrade', b'websocket'), 
+    (b'connection', b'upgrade'), 
+    (b'user-agent', b'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'), 
+    (b'accept', b'*/*'), 
+    (b'accept-language', b'en-CA,en-US;q=0.7,en;q=0.3'), 
+    (b'accept-encoding', b'gzip, deflate'), 
+    (b'sec-websocket-version', b'13'), 
+    (b'origin', b'http://localhost'), 
+    (b'sec-websocket-extensions', b'permessage-deflate'), 
+    (b'sec-websocket-key', b'7xzaGRI0doNNQ5RA5D6N+g=='), 
+    (b'cookie', b'csrftoken=nbEtLxjI5Ug5OEB8B8N5QrECFZNHjfMSft9vZjGGX1i4mvQiRMdqZLDknn8UnfPq; sessionid=ga87u8c0eefiawavl94lakke2zern2v4'), 
+    (b'pragma', b'no-cache'), 
+    (b'cache-control', b'no-cache')]
+query_string : b''
+client : ['172.20.0.1', 0]
+server : ['172.20.0.4', 8001]
+subprotocols : []
+asgi : {'version': '3.0'}
+cookies : {'csrftoken': 'nbEtLxjI5Ug5OEB8B8N5QrECFZNHjfMSft9vZjGGX1i4mvQiRMdqZLDknn8UnfPq', 'sessionid': 'ga87u8c0eefiawavl94lakke2zern2v4'}
+session : <django.contrib.sessions.backends.db.SessionStore object at 0x7f48d36753d0>
+user : AnonymousUser
+path_remaining : 
+url_route : {'args': (), 'kwargs': {}}
+type : websocket
+path : /ws/user/raw_path : b'/ws/user/'
+headers : [(b'x-forwarded-for', b'172.20.0.1'), (b'host', b'localhost'), (b'upgrade', b'websocket'), (b'connection', b'upgrade'), (b'user-agent', b'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'), (b'accept', b'*/*'), (b'accept-language', b'en-CA,en-US;q=0.7,en;q=0.3'), (b'accept-encoding', b'gzip, deflate'), (b'sec-websocket-version', b'13'), (b'origin', b'http://localhost'), (b'sec-websocket-extensions', b'permessage-deflate'), 
+(b'sec-websocket-key', b'RTvB2Chf+JwXmETaoAN4vw=='), (b'dnt', b'1'), 
+(b'cookie', b'csrftoken=xAx2kLnZr2gsRg3PPhzIZuJFU4iibZK9gXJQftlZ5YDP3tsvbMbY4rEvyn2W0W0N; sessionid=f04ntsbihgds9igpuvznfd1rya951cm7'), (b'pragma', b'no-cache'), (b'cache-control', b'no-cache')]query_string : b''client : ['172.20.0.1', 0]server : ['172.20.0.4', 8001]subprotocols : []asgi : {'version': '3.0'}
+cookies : {'csrftoken': 'xAx2kLnZr2gsRg3PPhzIZuJFU4iibZK9gXJQftlZ5YDP3tsvbMbY4rEvyn2W0W0N', 'sessionid': 'f04ntsbihgds9igpuvznfd1rya951cm7'}
+session : <django.contrib.sessions.backends.db.SessionStore object at 0x7f48d331e640>
+user : AnonymousUserpath_remaining : url_route : {'args': (), 'kwargs': {}}
+
+

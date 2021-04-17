@@ -79,45 +79,51 @@ document.getElementById("findGame").addEventListener('click', findGame);
 
 function findGame() {
     var opponent = window.prompt("Enter opponent's username: ", "Username");
-    fetch(findGameUrl, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': token
-        },
-        body: JSON.stringify({
-            'opponent': opponent
-        })
-    },)
-    .then(response => response.json())
-    .then(data => {
-        console.log('Success:', data);
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-    });
+    // fetch(findGameUrl, {
+    //     method: 'POST',
+    //     credentials: 'include',
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //         'X-CSRFToken': token
+    //     },
+    //     body: JSON.stringify({
+    //         'opponent': opponent
+    //     })
+    // },)
+    // .then(response => response.json())
+    // .then(data => {
+    //     console.log('Success:', data);
+    // })
+    // .catch((error) => {
+    //     console.error('Error:', error);
+    // });
+    socket.send(JSON.stringify({
+        'challenge': opponent
+    }));
 }
 
 function newGame(opponent) {
-    fetch(newGameUrl, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': token
-        },
-        body: JSON.stringify({
-            'opponent': opponent
-        })
-    },)
-    .then(response => response.json())
-    .then(data => {
-        console.log('Success:', data);
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-      });
+    // fetch(newGameUrl, {
+    //     method: 'POST',
+    //     credentials: 'include',
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //         'X-CSRFToken': token
+    //     },
+    //     body: JSON.stringify({
+    //         'opponent': opponent
+    //     })
+    // },)
+    // .then(response => response.json())
+    // .then(data => {
+    //     console.log('Success:', data);
+    // })
+    // .catch((error) => {
+    //     console.error('Error:', error);
+    //   });
+    socket.send(JSON.stringify({
+        'gameVS': opponent
+    }));
 }
 
 function getCookie(name) {
@@ -133,14 +139,6 @@ function getCookie(name) {
         }
     }
     return cookieValue;
-}
-const boardUrl = 0;
-function getBoard() {
-    fetch(boardUrl, {credentials: 'include'})
-    .then(rsp => rsp.json())
-    .then(data => {
-        console.log("Data:", data)
-    })
 }
 
 function getLegalMoves(squareId) {

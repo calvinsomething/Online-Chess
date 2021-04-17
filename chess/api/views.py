@@ -22,50 +22,50 @@ class GameBoardView(generics.RetrieveAPIView):
     queryset = GameBoard.objects.all()
 
 
-@api_view(['POST'])
-@parser_classes([JSONParser])
-@permission_classes([IsAuthenticated])
-def newGame(request):
-    user = request.user
-    opponentName = request.data.get("opponent")
-    opponent = User.objects.get(username=opponentName)
-    if randint(0,1):
-        freshBoard = GameBoard(whiteUser=user, blackUser=opponent)
-    else:
-        freshBoard = GameBoard(whiteUser=opponent, blackUser=user)
-    freshBoard.save()
-    user.currentGame = freshBoard
-    user.save()
-    opponent.currentGame = freshBoard
-    opponent.save()
+# @api_view(['POST'])
+# @parser_classes([JSONParser])
+# @permission_classes([IsAuthenticated])
+# def newGame(request):
+#     user = request.user
+#     opponentName = request.data.get("opponent")
+#     opponent = User.objects.get(username=opponentName)
+#     if randint(0,1):
+#         freshBoard = GameBoard(whiteUser=user, blackUser=opponent)
+#     else:
+#         freshBoard = GameBoard(whiteUser=opponent, blackUser=user)
+#     freshBoard.save()
+#     user.currentGame = freshBoard
+#     user.save()
+#     opponent.currentGame = freshBoard
+#     opponent.save()
 
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-    "user%s" % user.id,
-    {"type": "newGame", "game_id": freshBoard.id, "opponent_id": opponent.id}
-    )
-    async_to_sync(channel_layer.group_send)(
-    "user%s" % opponent.id,
-    {"type": "newGame", "game_id": freshBoard.id, "opponent_id": user.id}
-    )
-    return Response({"new board": freshBoard.id})
+#     channel_layer = get_channel_layer()
+#     async_to_sync(channel_layer.group_send)(
+#     "user%s" % user.id,
+#     {"type": "newGame", "game_id": freshBoard.id, "opponent_id": opponent.id}
+#     )
+#     async_to_sync(channel_layer.group_send)(
+#     "user%s" % opponent.id,
+#     {"type": "newGame", "game_id": freshBoard.id, "opponent_id": user.id}
+#     )
+#     return Response({"new board": freshBoard.id})
 
 
-@api_view(['POST'])
-@parser_classes([JSONParser])
-@permission_classes([IsAuthenticated])
-def findGame(request):
-    user = request.user
-    opponentName = request.data.get("opponent")
-    try:
-        opponent = User.objects.get(username = opponentName)
-    except:
-        return Response({"error": "Can't find that user."})
+# @api_view(['POST'])
+# @parser_classes([JSONParser])
+# @permission_classes([IsAuthenticated])
+# def findGame(request):
+#     user = request.user
+#     opponentName = request.data.get("opponent")
+#     try:
+#         opponent = User.objects.get(username = opponentName)
+#     except:
+#         return Response({"error": "Can't find that user."})
 
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-    "user%s" % opponent.id,
-    {"type": "incChallenge", "challenger": user.username}
-    )
+#     channel_layer = get_channel_layer()
+#     async_to_sync(channel_layer.group_send)(
+#     "user%s" % opponent.id,
+#     {"type": "incChallenge", "challenger": user.username}
+#     )
 
-    return Response({"challenging": opponentName})
+#     return Response({"challenging": opponentName})

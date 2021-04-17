@@ -1,10 +1,15 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.consumer import SyncConsumer
 from api.models import GameBoard
 from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from users.models import User
+from random import randint
+from pathlib import Path
 
+class GameConsumer(SyncConsumer):
 
 class UserConsumer(AsyncWebsocketConsumer):
     game_id = 0
@@ -23,6 +28,44 @@ class UserConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'challenger': challenger
         }))
+
+    @database_sync_to_async
+    def startGame(self, opponentName):
+        user = self.scope['user']
+        opponent = User.objects.get(username=opponentName)
+        if randint(0,1):
+            freshBoard = GameBoard(whiteUser=user, blackUser=opponent)
+        else:
+            freshBoard = GameBoard(whiteUser=opponent, blackUser=user)
+        freshBoard.save()
+        user.currentGame = freshBoard
+        user.save()
+        opponent.currentGame = freshBoard
+        opponent.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+        "user%s" % user.id,
+        {"type": "newGame", "game_id": freshBoard.id, "opponent_id": opponent.id}
+        )
+        async_to_sync(channel_layer.group_send)(
+        "user%s" % opponent.id,
+        {"type": "newGame", "game_id": freshBoard.id, "opponent_id": user.id}
+        )
+
+    @database_sync_to_async
+    def findGame(self, opponentName):
+        user = self.scope['user']
+        print('FINDING GAME.....')
+        print(self.channel_name)
+        try:
+            opponent = User.objects.get(username=opponentName)
+        except:
+            return #Response({"error": "Can't find that user."})
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+        "user%s" % opponent.id,
+        {"type": "incChallenge", "challenger": user.username}
+        )
 
     @database_sync_to_async
     def getBoard(self):
@@ -114,6 +157,10 @@ class UserConsumer(AsyncWebsocketConsumer):
             await self.makeMove(text_data_json['makeMove'])
         if text_data_json.get('promotion'):
             await self.choosePromotion(text_data_json['promotion'], self.scope['user'].id)
+        if text_data_json.get('gameVS'):
+            await self.startGame(text_data_json['gameVS'])
+        if text_data_json.get('challenge'):
+            await self.findGame(text_data_json['challenge'])
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
@@ -121,47 +168,51 @@ class UserConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-class GameConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        self.game_id = self.scope['url_route']['kwargs']['game_id']
-        self.game_group_id = 'game_%s' % self.game_id
-        self.player = self.scope['user']
 
-        board = GameBoard.objects.create(whiteUserId = whiteID, blackUserId = blackID)
-        # Join room group
-        await self.channel_layer.group_add(
-            self.game_group_id,
-            self.channel_name
-        )
 
-        await self.accept()
 
-    async def disconnect(self, close_code):
-        # Leave game group
-        await self.channel_layer.group_discard(
-            self.game_group_id,
-            self.channel_name
-        )
 
-    # Receive message from WebSocket
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        board = text_data_json['board']
+# class GameConsumer(AsyncWebsocketConsumer):
+#     async def connect(self):
+#         self.game_id = self.scope['url_route']['kwargs']['game_id']
+#         self.game_group_id = 'game_%s' % self.game_id
+#         self.player = self.scope['user']
 
-        # Send move to game group
-        await self.channel_layer.group_send(
-            self.game_group_id,
-            {
-                'type': 'board_update',
-                'board': board,
-            }
-        )
+#         board = GameBoard.objects.create(whiteUserId = whiteID, blackUserId = blackID)
+#         # Join room group
+#         await self.channel_layer.group_add(
+#             self.game_group_id,
+#             self.channel_name
+#         )
 
-    # Receive board update from game group
-    async def board_update(self, event):
-        board = event['board']
+#         await self.accept()
 
-        # Send message to WebSocket
-        await self.send(text_data=json.dumps({
-            'board': board
-        }))
+#     async def disconnect(self, close_code):
+#         # Leave game group
+#         await self.channel_layer.group_discard(
+#             self.game_group_id,
+#             self.channel_name
+#         )
+
+#     # Receive message from WebSocket
+#     async def receive(self, text_data):
+#         text_data_json = json.loads(text_data)
+#         board = text_data_json['board']
+
+#         # Send move to game group
+#         await self.channel_layer.group_send(
+#             self.game_group_id,
+#             {
+#                 'type': 'board_update',
+#                 'board': board,
+#             }
+#         )
+
+#     # Receive board update from game group
+#     async def board_update(self, event):
+#         board = event['board']
+
+#         # Send message to WebSocket
+#         await self.send(text_data=json.dumps({
+#             'board': board
+#         }))
