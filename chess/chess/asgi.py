@@ -18,7 +18,6 @@ application = ProtocolTypeRouter({
         )
     ),
     "channel": ChannelNameRouter({
-        "thumbnails-generate": consumers.GenerateConsumer.as_asgi(),
-        "thumbnails-delete": consumers.DeleteConsumer.as_asgi(),
+        "game": GameConsumer.as_asgi(),
     }),
 })

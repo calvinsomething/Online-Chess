@@ -11,7 +11,7 @@ class GameBoard(models.Model):
     timeStarted = models.DateTimeField(default=timezone.now)
     whitesTurn = models.BooleanField(default=True)
     check = models.BooleanField(default=False)
-    winner = models.CharField(max_length=1, default=0)
+    winner = models.CharField(max_length=1, default='0')
     board = models.CharField(max_length=64, default=\
         "RNBQKBNR" + \
         "PPPPPPPP" + \
