@@ -112,6 +112,9 @@ class GameBoard(models.Model):
 
 
     def getMoves(self, piece, playerId):
+        print("Attackers ===========================")
+        print(self.kAttacker1)
+        print(self.kAttacker2)
         playingBlack = playerId == self.blackUser.id
         myPiece = playingBlack == (self.board[piece] == self.board[piece].upper())
         myTurn = self.whitesTurn != playingBlack
