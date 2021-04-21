@@ -22,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = '8kelpl0s@!8-0l))x7(1sz+xhoqhyks3o329!=qvq9j&v(pk&5'
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'h@+k53w85lv&)ci1fwwwaz0syp9q!bh18syk%qj$l9(^9xm!ah' #os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = int(os.environ.get('DEBUG'))
+DEBUG = 0 #int(os.environ.get('DEBUG'))
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
+ALLOWED_HOSTS = "*" #os.environ.get('ALLOWED_HOSTS').split(',')
 
 # Application definition
 
