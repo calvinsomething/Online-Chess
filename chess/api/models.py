@@ -42,12 +42,12 @@ class GameBoard(models.Model):
             if self.board[sq] == '0': continue
             playingBlack = self.board[sq] == self.board[sq].upper()
             attacks = self.movesByPiece[self.board[sq]](self, sq, playingBlack, attacks=True)
-            if self.board[sq] == self.board[sq].lower():
+            if not playingBlack:
                 for half in range(2):
-                    wAttacks[half] += attacks[half] - (wAttacks[half] & attacks[half])
+                    wAttacks[half] |= attacks[half]
             else:
                 for half in range(2):
-                    bAttacks[half] += attacks[half] - (wAttacks[half] & attacks[half])
+                    bAttacks[half] |= attacks[half]
         self.wAttacksTop = wAttacks[0]
         self.wAttacksBottom = wAttacks[1]
         self.bAttacksTop = bAttacks[0]
@@ -265,10 +265,10 @@ class GameBoard(models.Model):
 
     def kingMoves(self, piece, playingBlack, attacks=False):
         moves = self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S', rng=2, attacks=attacks)
-        castleMoves = self.castleMoves(playingBlack)
         if attacks:
-            eAttacks = [0, 0]
-        elif playingBlack:
+            return moves
+        castleMoves = self.castleMoves(playingBlack)
+        if playingBlack:
             eAttacks = [self.wAttacksTop, self.wAttacksBottom]
         else:
             eAttacks = [self.bAttacksTop, self.bAttacksBottom]
