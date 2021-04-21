@@ -266,7 +266,9 @@ class GameBoard(models.Model):
     def kingMoves(self, piece, playingBlack, attacks=False):
         moves = self.directions(piece, playingBlack, 'N', 'NW', 'NE', 'W', 'E', 'SW', 'SE', 'S', rng=2, attacks=attacks)
         castleMoves = self.castleMoves(playingBlack)
-        if playingBlack:
+        if attacks:
+            eAttacks = [0, 0]
+        elif playingBlack:
             eAttacks = [self.wAttacksTop, self.wAttacksBottom]
         else:
             eAttacks = [self.bAttacksTop, self.bAttacksBottom]
