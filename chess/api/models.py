@@ -112,9 +112,6 @@ class GameBoard(models.Model):
 
 
     def getMoves(self, piece, playerId):
-        print("Attackers ===========================")
-        print(self.kAttacker1)
-        print(self.kAttacker2)
         playingBlack = playerId == self.blackUser.id
         myPiece = playingBlack == (self.board[piece] == self.board[piece].upper())
         myTurn = self.whitesTurn != playingBlack
@@ -196,7 +193,8 @@ class GameBoard(models.Model):
                 (self.board[piece + attack] == self.board[piece + attack].upper()) != playingBlack or \
                 piece + attack == self.enPassant)):
                 legalMoves = self.toBitset(piece + attack, legalMoves)
-                if self.board[piece + attack].upper() == 'K':
+                if (not playingBlack and self.board[piece + attack] == 'K') \
+                    or (playingBlack and self.board[piece + attack] == 'k'):
                     self.putInCheck(piece)
         if not attacks and -1 < piece + forward < 64 and self.board[piece + forward] == '0':
             legalMoves = self.toBitset(piece + forward, legalMoves)
