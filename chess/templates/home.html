@@ -32,11 +32,9 @@
     </div>
   </div>
 </nav>
-<div class="row pt-5"></div>
-<div class="row">
-<div class="xl-col-10 l-col-11 m-col-12">
 <div class="container" id="board">
-  <div class="row mt-2 no-gutters border border-primary">
+  <div class="row pt-5"></div>
+  <div class="row mt-5 mt-xl-2 no-gutters">
     {% for col in '01234567' %}
       {% for row in '01234567' %}
         {% if row == '0' %}
@@ -48,10 +46,14 @@
         {% endif %}
       {% endfor %}
     {% endfor %}
-    <div class="col-4"></div> <!--   ## try to add bootstrap container thing that goes on side if there's room or bottom if not-->
+    <div class="d-none d-lg-block col-4" style="background-color: blue;"></div>
+  </div>
+  <div class="row d-lg-none" style="background-color: blue;">
+    <div class="col-4">
+      hi
+    </div>
   </div>
 </div>
-</div>
-</div>
+<audio id="sound" src={% static "move.mp3" %}></audio>
 <script src={% static "js/game.js" %}></script>
 {% endblock content %}

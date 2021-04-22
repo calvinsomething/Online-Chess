@@ -182,6 +182,7 @@ function updateBoard(data) {
         }
         playerColor = 'B';
         draw();
+        sound.play();
         return;
     }
     for (let row = 0; row < 8; row++)
@@ -191,6 +192,7 @@ function updateBoard(data) {
         }
     playerColor = 'W';
     draw();
+    sound.play();
 }
 
 function draw() {
@@ -272,3 +274,4 @@ let playerColor;
 let takenFrom;
 let inHand;
 let myTurn = false;
+const sound = document.getElementById('sound');
