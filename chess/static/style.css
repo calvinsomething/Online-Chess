@@ -129,3 +129,10 @@ margin-left: 4px;
 #board {
     cursor: default;
 }
+
+.side-cap {
+    object-position:-25px 0px; width: 110px;
+}
+
+
+

@@ -51,6 +51,17 @@ class GameConsumer(SyncConsumer):
         opponent.save()
         self.updateBoard(user, opponent, freshBoard)
 
+    def choosePromotion(self, event):
+        user = User.objects.get(id=event['user_id'])
+        game = user.currentGame
+        if user.id == game.whiteUser.id and 'p' in game.board[:8]:
+            game.promote(event['promotion'], user.id)
+            opponent = game.blackUser
+        elif user.id == game.blackUser.id and 'P' in game.board[56:]:
+            game.promote(event['promotion'], user.id)
+            opponent = game.whiteUser
+        self.updateBoard(user, opponent, game)
+
     def updateBoard(self, user, opponent, game):
         for player in (user, opponent):
             playingBlack = player == game.blackUser
@@ -58,6 +69,7 @@ class GameConsumer(SyncConsumer):
                 or (not game.whitesTurn and playingBlack)
             text_data = {
                 'board': game.board,
+                'captured': game.captured
             }
             if playingBlack:
                 text_data['playingBlack'] = 'True'
@@ -150,19 +162,19 @@ class UserConsumer(AsyncWebsocketConsumer):
             {"type": "getMoves", "piece": piece, "user_id": self.scope['user'].id}
         )
 
-    @database_sync_to_async
-    def choosePromotion(self, promotion, playerId):
-        game = GameBoard.objects.get(id=0)
-        if playerId == game.whiteUser.id and 'p' in game.board[:8]:
-            game.promote(promotion, playerId)
-        elif playerId == game.blackUser.id and 'P' in game.board[56:]:
-            game.promote(promotion, playerId)
-        async_to_sync(self.updateBoard)()
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "user%s" % self.opponent_id,
-            {"type": "updateBoard"}
-        )
+    # @database_sync_to_async
+    # def choosePromotion(self, promotion, playerId):
+    #     game = GameBoard.objects.get(id=0)
+    #     if playerId == game.whiteUser.id and 'p' in game.board[:8]:
+    #         game.promote(promotion, playerId)
+    #     elif playerId == game.blackUser.id and 'P' in game.board[56:]:
+    #         game.promote(promotion, playerId)
+    #     async_to_sync(self.updateBoard)()
+    #     channel_layer = get_channel_layer()
+    #     async_to_sync(channel_layer.group_send)(
+    #         "user%s" % self.opponent_id,
+    #         {"type": "updateBoard"}
+    #     )
 
     async def makeMove(self, move):
         await self.channel_layer.send(
@@ -170,11 +182,18 @@ class UserConsumer(AsyncWebsocketConsumer):
             {"type": "makeMove", "move": move, "user_id": self.scope['user'].id}
         )
 
+    async def choosePromotion(self, promotion):
+        await self.channel_layer.send(
+            "game",
+            {"type": "choosePromotion", "promotion": promotion, "user_id": self.scope['user'].id}
+        )
+
     async def promote(self, event):
         text_data = {
             'promote': 'True'
         }
         await self.send(text_data=json.dumps(text_data))
+    
 
     async def returnMoves(self, piece):
         moves = await self.getMoves(piece)
@@ -198,7 +217,7 @@ class UserConsumer(AsyncWebsocketConsumer):
         if text_data_json.get('makeMove'):
             await self.makeMove(text_data_json['makeMove'])
         if text_data_json.get('promotion'):
-            await self.choosePromotion(text_data_json['promotion'], self.scope['user'].id)
+            await self.choosePromotion(text_data_json['promotion'])
         if text_data_json.get('gameVS'):
             await self.startGame(text_data_json['gameVS'])
         if text_data_json.get('challenge'):

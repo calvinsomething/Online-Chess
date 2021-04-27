@@ -163,6 +163,7 @@ class GameBoard(models.Model):
     def promote(self, promotion, playerId):
         if playerId == self.blackUser.id:
             piece = self.board[56:].find('P') + 56
+            promotion = promotion.upper()
         else:
             piece = self.board[:8].find('p')
             promotion = promotion.lower()

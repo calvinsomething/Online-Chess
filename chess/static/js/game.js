@@ -181,18 +181,107 @@ function updateBoard(data) {
                 board[row][col] = translate(official[sq]);
         }
         playerColor = 'B';
-        draw();
-        sound.play();
-        return;
-    }
+    } else {
     for (let row = 0; row < 8; row++)
         for (let col = 0; col < 8; col++) {
             const sq = row * 8 + col % 8;
             board[row][col] = translate(official[sq]);
         }
     playerColor = 'W';
+    }
     draw();
     sound.play();
+    if (data['captured']){
+        drawCaptured(data['captured']);
+    }
+}
+
+function newCapturedImg(img, side, bottom) {
+    const newColS = document.createElement('div');
+    newColS.className = 'col-1 pl-xl-4';
+    newColS.style= 'width: 30px;';
+    const newImgS = document.createElement('img');
+    newImgS.src = img;
+    newImgS.style = sideStyle;
+    newColS.appendChild(newImgS);
+    const newColB = document.createElement('div');
+    newColB.className = 'col-1';
+    const newImgB = document.createElement('img');
+    newImgB.src = img;
+    newImgB.style = bottomStyle;
+    newColB.appendChild(newImgB);
+    side.appendChild(newColS);
+    bottom.appendChild(newColB);
+}
+
+function drawCaptured(captured) {
+    const sections = [
+        myPawnsS, myPiecesS, ePawnsS, ePiecesS, myPawnsB, myPiecesB, ePawnsB, ePiecesB
+    ];
+    for (section of sections)
+        section.innerHTML = '';
+    const order = ['Q', 'B', 'N', 'R', 'q', 'b', 'n', 'r']
+    const bPawns = captured.match(/P/g);
+    const wPawns = captured.match(/p/g);
+    if (bPawns)
+        for (i = 0; i < bPawns.length; i++)
+            if (playerColor === 'B')
+                newCapturedImg(bPawnImg, myPawnsS, myPawnsB);
+            else
+                newCapturedImg(bPawnImg, ePawnsS, ePawnsB);
+    if (wPawns)
+        for (i = 0; i < wPawns.length; i++)
+            if (playerColor === 'B') 
+                newCapturedImg(wPawnImg, ePawnsS, ePawnsB);
+            else 
+                newCapturedImg(wPawnImg, myPawnsS, myPawnsB);
+    var bPieces = captured.split('').filter((piece) => (piece !== 'P' && piece !== piece.toLowerCase()));
+    var wPieces = captured.split('').filter((piece) => (piece !== 'p' && piece !== piece.toUpperCase()));
+    if (bPieces)
+        bPieces.sort((a, b) => order.findIndex(ele => ele === a) - order.findIndex(ele => ele === b));
+        for (piece of bPieces) {
+            var img;
+            switch (piece) {
+                case 'Q':
+                    img = bQueenImg;
+                    break;
+                case 'B':
+                    img = bBishopImg;
+                    break;
+                case 'N':
+                    img = bKnightImg;
+                    break;
+                case 'R':
+                    img = bRookImg;
+            }
+            if (playerColor === 'B') 
+                newCapturedImg(img, myPiecesS, myPiecesB);
+            else 
+                newCapturedImg(img, ePiecesS, ePiecesB);
+        }
+    if (wPieces)
+        console.log(wPieces);
+        wPieces.sort((a, b) => order.findIndex(ele => ele === a) - order.findIndex(ele => ele === b));
+        for (piece of wPieces) {
+            var img;
+            switch (piece) {
+                case 'q':
+                    img = wQueenImg;
+                    break;
+                case 'b':
+                    img = wBishopImg;
+                    break;
+                case 'n':
+                    img = wKnightImg;
+                    break;
+                case 'r':
+                    img = wRookImg;
+            }
+            if (playerColor === 'B') 
+                newCapturedImg(img, ePiecesS, ePiecesB);
+            else 
+                newCapturedImg(img, myPiecesS, myPiecesB);
+        }
 }
 
 function draw() {
@@ -201,7 +290,7 @@ function draw() {
             const square = document.getElementById(`${row},${col}`);
             const piece = board[row][col];
             if (piece) {
-                square.style.backgroundImage = `url(static/images/pieces/${piece}.png)`;
+                square.style.backgroundImage = `url(${imgDir}${piece}.png)`;
                 square.style.backgroundRepeat = "no-repeat";
                 square.style.backgroundPosition = "center";
                 square.style.backgroundSize = "cover";
@@ -225,12 +314,12 @@ function pickUpPiece(e) {
     }
     var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
     if(inHand)
-        if(width > 1200)
-            document.getElementById("board").style.cursor = `url(static/images/pieces/${inHand}.png) 60 60, default`;
-        else if(width > 992)
-            document.getElementById("board").style.cursor = `url(static/images/pieces/Medium/${inHand}.png) 45 45, default`;
+        if(width > 992)
+            document.getElementById("board").style.cursor = `url(${imgDir}${inHand}.png) 60 60, default`;
+        else if(width > 576)
+            document.getElementById("board").style.cursor = `url(${imgDir}Medium/${inHand}.png) 45 45, default`;
         else
-            document.getElementById("board").style.cursor = `url(static/images/pieces/Small/${inHand}.png) 30 30, default`;
+            document.getElementById("board").style.cursor = `url(${imgDir}Small/${inHand}.png) 30 30, default`;
 
     console.log("Picked up piece from " + square.id);
 }
@@ -259,11 +348,9 @@ function placePiece(e) {
 }
 
 function getWinSize() {
-    
-
     var height = window.innerHeight
-    || document.documentElement.clientHeight
-    || document.body.clientHeight;
+        || document.documentElement.clientHeight
+        || document.body.clientHeight;
     return [width, height];
 }
 
@@ -275,3 +362,23 @@ let takenFrom;
 let inHand;
 let myTurn = false;
 const sound = document.getElementById('sound');
+const myPawnsS = document.getElementById("my-pawns-s");
+const myPiecesS = document.getElementById("my-pieces-s");
+const ePawnsS = document.getElementById("e-pawns-s");
+const ePiecesS = document.getElementById("e-pieces-s");
+const myPawnsB = document.getElementById("my-pawns-b");
+const myPiecesB = document.getElementById("my-pieces-b");
+const ePawnsB = document.getElementById("e-pawns-b");
+const ePiecesB = document.getElementById("e-pieces-b");
+sideStyle = "object-position: 0px 0px; width: 100px;";
+bottomStyle = "object-position: -10px 0px; width: 70px;";
+const bPawnImg = `${imgDir}BP.png`;
+const wPawnImg = `${imgDir}WP.png`;
+const bRookImg = `${imgDir}BR.png`;
+const wRookImg = `${imgDir}WR.png`;
+const bKnightImg = `${imgDir}BN.png`;
+const wKnightImg = `${imgDir}WN.png`;
+const bBishopImg = `${imgDir}BB.png`;
+const wBishopImg = `${imgDir}WB.png`;
+const bQueenImg = `${imgDir}BQ.png`;
+const wQueenImg = `${imgDir}WQ.png`;

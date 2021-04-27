@@ -34,7 +34,7 @@
 </nav>
 <div class="container" id="board">
   <div class="row pt-5"></div>
-  <div class="row mt-5 mt-xl-2 no-gutters">
+  <div class="row mt-5 mt-md-2 mt-lg-5 mt-xl-2 no-gutters">
     {% for col in '01234567' %}
       {% for row in '01234567' %}
         {% if row == '0' %}
@@ -46,14 +46,42 @@
         {% endif %}
       {% endfor %}
     {% endfor %}
-    <div class="d-none d-lg-block col-4" style="background-color: blue;"></div>
-  </div>
-  <div class="row d-lg-none" style="background-color: blue;">
-    <div class="col-4">
-      hi
+    <div class="d-none d-lg-block col-4" style="background-color: #443014;">
+      <div class="container ml-1 pl-2 pl-xl-3 pr-5 pr-xl-0" style="width: 280px;">
+            <div class="row pt-3 pt-xl-5" id="my-pawns-s" style="height: 10%;">
+            </div>
+            <div class="row" id="my-pieces-s" style="height: 10%; padding-top: 20%;">
+            </div>
+            <div class="row" style="height: 35%;">
+            </div>
+            <div class="row pt-xl-5" id="e-pawns-s" style="height: 10%;">
+            </div>
+            <div class="row" id="e-pieces-s" style="height: 10%; padding-top: 20%;">
+            </div>
+      </div>
     </div>
+  </div>
+  <div class="row d-lg-none" style="background-color: #443014; height: 200px">
+    <div class="col-6" style="padding: 0 0 0 0;">
+    <div class="container" style="padding-right: 5%;">
+            <div class="row" id="e-pawns-b" style="height: 15%; padding-top: 15%;">
+            </div>
+            <div class="row" id="e-pieces-b" style="height: 15%; padding-top: 15%;">
+            </div>
+  </div>
+  </div>
+  <div class="col-6" style="padding: 0 0 0 0;">
+    <div class="container" style="padding-left: 5%;">
+            <div class="row" id="my-pawns-b" style="height: 15%; padding-top: 15%;">
+            </div>
+            <div class="row" id="my-pieces-b" style="height: 15%; padding-top: 15%;">
+            </div>
+  </div>
   </div>
 </div>
 <audio id="sound" src={% static "move.mp3" %}></audio>
+<script>
+  const imgDir = "{% static "images/pieces/" %}";
+</script>
 <script src={% static "js/game.js" %}></script>
 {% endblock content %}
