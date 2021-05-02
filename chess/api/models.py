@@ -189,10 +189,9 @@ class GameBoard(models.Model):
         for attack in iAttacks:
             if (piece + attack) // 8 != (piece + forward) // 8 or \
                 0 > piece + attack > 63: continue
-            if attacks or (
-                self.board[piece + attack] != '0' and (
-                (self.board[piece + attack] == self.board[piece + attack].upper()) != playingBlack or \
-                piece + attack == self.enPassant)):
+            if attacks or piece + attack == self.enPassant \
+                or (self.board[piece + attack] != '0' \
+                and (self.board[piece + attack] == self.board[piece + attack].upper()) != playingBlack):
                 legalMoves = self.toBitset(piece + attack, legalMoves)
                 if (not playingBlack and self.board[piece + attack] == 'K') \
                     or (playingBlack and self.board[piece + attack] == 'k'):
