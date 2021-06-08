@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 from .models import User
 
+
 class RegisterForm(UserCreationForm):
     class Meta:
         model = User
@@ -18,6 +19,22 @@ class RegisterForm(UserCreationForm):
             if field == 'password1': placeholder = 'Password'
             if field == 'password2': placeholder = 'Re-Enter Password'
             self.fields[field].widget.attrs.update({'class': 'form-control', 'placeholder': placeholder})
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        try:
+            if User.objects.get(username__iexact=username):
+                raise forms.ValidationError('Username is unavailable.')
+        except User.DoesNotExist:
+            return username
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email').lower()
+        try:
+            if User.objects.get(email=email):
+                raise forms.ValidationError('An account with that email already exists.')
+        except User.DoesNotExist:
+            return email
 
 
 class LoginForm(AuthenticationForm):

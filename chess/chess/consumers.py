@@ -127,7 +127,7 @@ class UserConsumer(AsyncWebsocketConsumer):
         print('FINDING GAME.....')
         print(self.channel_name)
         try:
-            opponent = User.objects.get(username=opponentName)
+            opponent = User.objects.get(username__iexact=opponentName)
         except:
             return #Response({"error": "Can't find that user."})
         async_to_sync(self.channel_layer.group_send)(
