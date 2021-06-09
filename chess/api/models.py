@@ -68,6 +68,7 @@ class GameBoard(models.Model):
                 if not self.alterBoard(move[0], move[1]):
                     return False
                 self.whitesTurn = not self.whitesTurn
+                self.moves += (f'{move[0]},{move[1]};')
                 self.setAttacks()
                 self.isGameOver(playerId)
                 self.save()
