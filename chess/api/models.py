@@ -22,6 +22,7 @@ class GameBoard(models.Model):
         "pppppppp" + \
         "rnbqkbnr")
     moves = models.TextField(blank=True)
+    promos = models.TextField(blank=True)
     enPassant = models.IntegerField(default=-1)
     castle = models.IntegerField(default=15)
     captured = models.CharField(max_length=30, blank=True)
@@ -173,6 +174,7 @@ class GameBoard(models.Model):
         segments.append(self.board[piece + 1:])
         self.board = segments[0] + segments[1]
         self.whitesTurn = not self.whitesTurn
+        self.promos += promotion
         self.setAttacks()
         self.isGameOver(playerId)
         self.save()

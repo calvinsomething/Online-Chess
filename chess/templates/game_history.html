@@ -5,7 +5,7 @@
 <div class="row pt-5"></div>
 <main class='container'>
     {% for game in games %}
-        <button type="button" class="btn btn-secondary btn-lg btn-block">{{ game.timeStarted }}</button>
+        <a type="button" class="btn btn-secondary btn-lg btn-block" href="{% url 'replay' game.id %}">{{ game.whiteUser }} vs {{game.blackUser }} -- {{ game.timeStarted }}</a>
     {% endfor %}
 </main>
 {% endblock %}
