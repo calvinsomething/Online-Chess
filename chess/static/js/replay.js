@@ -34,23 +34,19 @@ function setBoard() {
 function move(from, to, fwdIndex) {
     var row = Math.floor(parseInt(from) / 8);
     var col = parseInt(from) % 8;
-    console.log(`from: ${row}, ${col}`);
     const piece = board[row][col];
     if (lastCap && movesIndex === lastCap.index)
     {
         board[row][col] = captured[--capIndex];
         lastCap = lastCap.prev;
-        console.log(captured[capIndex] + 'was resurrected!');
     }
     else
         board[row][col] = '0';
-    draw(row, col, 0);
+    draw(row, col, translate(board[row][col]));
     row = Math.floor(parseInt(to) / 8);
     col = parseInt(to) % 8;
-    console.log(`to: ${row}, ${col}`);
     if (board[row][col] !== '0')
     {
-        console.log(captured[capIndex] + 'was captured.');
         lastCap = CapNode(fwdIndex, lastCap);
         capIndex++;
     }
@@ -85,7 +81,7 @@ function back() {
     tempIndex++;
     while (moveHistory[tempIndex] !== ';')
         from += moveHistory[tempIndex++];
-    move(from, to);
+    move(from, to, 0);
 }
 
 function CapNode(index, prev) {
