@@ -5,8 +5,8 @@ function translate(piece) {
     else return `B${piece}`;
 }
 
-function draw(row, col, piece) {
-    console.log('drawing piece ' + piece + '...');
+function draw(row, col) {
+    const piece = translate(board[row][col]);
     if (playingBlack) {
         row = 7 - row;
         col = 7 - col;
@@ -22,66 +22,90 @@ function draw(row, col, piece) {
     }
 }
 
+function makeMovesList(moves) {
+    var i = 0, newList = [];
+    while (i < moves.length) {
+        var from = '', to = '';
+        while (moves[i] !== ',')
+            from += moves[i++];
+        i++;
+        while (moves[i] !== ';')
+            to += moves[i++];
+        i++;
+        newList.push(parseInt(from));
+        newList.push(parseInt(to));
+    }
+    return newList;
+}
+
 function setBoard() {
     console.log("setting board...")
     for (let row = 0; row < 8; row++)
-        for (let col = 0; col < 8; col++) {
-            const piece = translate(board[row][col]);
-            draw(row, col, piece);
-        }
+        for (let col = 0; col < 8; col++)
+            draw(row, col);      
 }
 
-function move(from, to, fwdIndex) {
+function enPassant(row, col) {
+    if (row === 2) {
+        board[++row][col] = '0';
+        draw(row, col);
+    } else {
+        board[--row][col] = '0';
+        draw(row, col);
+    }
+    epi++;
+    capIndex++;
+}
+
+function reverseEP(row, col) {
+    if (row === 2) {
+        board[++row][col] = 'P';
+        draw(row, col);
+    } else {
+        board[--row][col] = 'p';
+        draw(row, col);
+    }
+    epi--;
+    capIndex--;
+}
+
+function move(from, to, fwd = true) {
     var row = Math.floor(parseInt(from) / 8);
     var col = parseInt(from) % 8;
     const piece = board[row][col];
-    if (lastCap && movesIndex === lastCap.index)
-    {
+    //if piece = k && checkCastle()
+    //  castle code
+    if (!fwd && moveCount === nextEnPassant[epi - 1]) {
+        reverseEP(row, col);
+        board[row][col] = '0';
+    } else if (!fwd && moveCount === lastCap[capIndex - 1])
         board[row][col] = captured[--capIndex];
-        lastCap = lastCap.prev;
-    }
     else
         board[row][col] = '0';
-    draw(row, col, translate(board[row][col]));
+    draw(row, col);
     row = Math.floor(parseInt(to) / 8);
     col = parseInt(to) % 8;
-    if (board[row][col] !== '0')
-    {
-        lastCap = CapNode(fwdIndex, lastCap);
-        capIndex++;
-    }
+    if (fwd && moveCount === nextEnPassant[epi])
+        enPassant(row, col);
+    else if (board[row][col] !== '0')
+        lastCap[capIndex++] = moveCount;
     board[row][col] = piece;
-    draw(row, col, translate(piece));
+    draw(row, col);
 }
 
 function forward() {
-    if (movesIndex == moveHistory.length)
+    if (movesIndex == movesList.length)
             return;
     const start = movesIndex;
-    var from = '', to = '';
-    while (moveHistory[movesIndex] !== ',')
-        from += moveHistory[movesIndex++]; 
-    movesIndex++;
-    while (moveHistory[movesIndex] !== ';')
-        to += moveHistory[movesIndex++];
-    movesIndex++;
-    move(from, to, start);
+    move(movesList[movesIndex++], movesList[movesIndex++]);
+    moveCount++;
 }
 
 function back() {
     if (movesIndex == 0)
             return;
-    movesIndex -= 2;
-    while (moveHistory[--movesIndex] !== ';' && movesIndex > -1) {}
-    movesIndex++;
-    var tempIndex = movesIndex;
-    var from = '', to = '';
-    while (moveHistory[tempIndex] !== ',')
-        to += moveHistory[tempIndex++];
-    tempIndex++;
-    while (moveHistory[tempIndex] !== ';')
-        from += moveHistory[tempIndex++];
-    move(from, to, 0);
+    moveCount--;
+    move(movesList[--movesIndex], movesList[--movesIndex], false);
 }
 
 function CapNode(index, prev) {
@@ -298,7 +322,19 @@ function CapNode(index, prev) {
 // }
 
 
-let lastCap, movesIndex = 0, promoIndex = 0, capIndex = 0;
+let movesIndex = 0, promoIndex = 0, capIndex = 0, epi = 0, moveCount = 0;
+let nextEnPassant = [], lastCap = [];
+for (let i = 0; i < captured.length; i++)
+    lastCap.push(0);
+let temp = '';
+for (let x of ePIndex) {
+    if (x === ',') {
+        nextEnPassant.push(parseInt(temp));
+        temp = '';
+    } else {
+        temp += x;
+    }
+}
 const sound = document.getElementById('sound');
 const myPawnsS = document.getElementById("my-pawns-s");
 const myPiecesS = document.getElementById("my-pieces-s");
@@ -332,6 +368,8 @@ let board = [
 ]
 
 setBoard();
+const movesList = makeMovesList(moveHistory);
+
 const fwd = document.getElementsByClassName('next');
 for (button of fwd)
     button.addEventListener('click', forward);

@@ -32,6 +32,8 @@ class GameBoard(models.Model):
     bAttacksBottom = models.IntegerField(default=0)
     kAttacker1 = models.IntegerField(default=-1)
     kAttacker2 = models.IntegerField(default=-1)
+    moveCount = models.IntegerField(default=0)
+    enPassantIndex = models.TextField(blank=True)
 
 
     def setAttacks(self):
@@ -62,6 +64,7 @@ class GameBoard(models.Model):
             if moveBitset[half] & legalMoves[half]:
                 if move[1] == self.enPassant and self.board[move[0]].upper() == 'P':
                     self.alterBoard(move[1], move[0] + (move[1] % 8 - move[0] % 8))
+                    self.enPassantIndex += str(self.moveCount) + ','
                 if move[1] - move[0] == 16 and self.board[move[0]] == 'P': self.enPassant = move[0] + 8
                 elif move[0] - move[1] == 16 and self.board[move[0]] == 'p': self.enPassant = move[0] - 8
                 else: self.enPassant = -1
@@ -72,6 +75,7 @@ class GameBoard(models.Model):
                 self.moves += (f'{move[0]},{move[1]};')
                 self.setAttacks()
                 self.isGameOver(playerId)
+                self.moveCount += 1
                 self.save()
                 return True
         return False

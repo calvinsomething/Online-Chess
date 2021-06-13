@@ -17,6 +17,8 @@ def replay(request, game_id):
         'moves': game.moves,
         'promotions': game.promos,
         'captured': game.captured,
-        'winner': game.winner
+        'winner': game.winner,
+        'count': game.moveCount,
+        'ePIndex': game.enPassantIndex
     }
     return render(request, "replay.html", context)
