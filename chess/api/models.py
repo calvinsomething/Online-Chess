@@ -69,10 +69,10 @@ class GameBoard(models.Model):
                 elif move[0] - move[1] == 16 and self.board[move[0]] == 'p': self.enPassant = move[0] - 8
                 else: self.enPassant = -1
                 self.setCastles(move[0])
+                self.moves += (f'{move[0]},{move[1]};')
                 if not self.alterBoard(move[0], move[1]):
                     return False
                 self.whitesTurn = not self.whitesTurn
-                self.moves += (f'{move[0]},{move[1]};')
                 self.setAttacks()
                 self.isGameOver(playerId)
                 self.moveCount += 1
@@ -192,7 +192,6 @@ class GameBoard(models.Model):
         else:
             forward = -8
             iAttacks = (-7, -9)
-        canCapture = lambda inPath : (playingBlack and inPath == inPath.lower()) or (not playingBlack and inPath == inPath.upper())
         for attack in iAttacks:
             if (piece + attack) // 8 != (piece + forward) // 8 or \
                 0 > piece + attack > 63: continue
