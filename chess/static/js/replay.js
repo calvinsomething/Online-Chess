@@ -53,6 +53,10 @@ function enPassant(row, col) {
         board[--row][col] = '0';
         draw(row, col);
     }
+    console.log("Capturing with en Passant...");
+    console.log(nextEnPassant[epi]);
+    console.log(captured);
+    console.log(capIndex);
     epi++;
     capIndex++;
 }
@@ -67,6 +71,10 @@ function reverseEP(row, col) {
     }
     epi--;
     capIndex--;
+    console.log("Capturing with en Passant...");
+    console.log(nextEnPassant[epi]);
+    console.log(captured);
+    console.log(capIndex);
 }
 
 function castle(row, col) {
@@ -111,8 +119,12 @@ function move(from, to, fwd = true) {
         piece = row == 0 ? 'p' : 'P';
         promoIndex--;
     }
-    if (!fwd && moveCount === lastCap[capIndex - 1])
+    if (!fwd && moveCount === lastCap[capIndex - 1]) {
+        console.log(`Reversing capture of ${captured[capIndex - 1]}`);
+        console.log(captured);
+        console.log(capIndex);
         board[row][col] = captured[--capIndex];
+    }
     else 
         board[row][col] = '0';
     draw(row, col);
@@ -121,8 +133,12 @@ function move(from, to, fwd = true) {
     if (fwd) {
         if (moveCount === nextEnPassant[epi])
             enPassant(row, col);
-        else if (board[row][col] !== '0')
+        else if (board[row][col] !== '0') {
+            console.log("Capturing...");
+            console.log(captured);
+            console.log(capIndex);
             lastCap[capIndex++] = moveCount;
+        }
         else if (piece.toLowerCase() === 'k' && Math.abs(to - from) > 1)
             castle(row, col);
     }
@@ -137,6 +153,9 @@ function move(from, to, fwd = true) {
 function forward() {
     if (movesIndex == movesList.length)
             return;
+    console.log('Moving forward...');
+    console.log(moveCount);
+    console.log(nextEnPassant[epi]);
     const start = movesIndex;
     move(movesList[movesIndex++], movesList[movesIndex++]);
     moveCount++;
@@ -148,17 +167,20 @@ function back() {
             return;
     moveCount--;
     move(movesList[--movesIndex], movesList[--movesIndex], false);
+    console.log('Moving backward...');
+    console.log(moveCount);
+    console.log(nextEnPassant[epi]);
 }
 
 
 let movesIndex = 0, promoIndex = 0, promoMoves = Array(promotions.length), capIndex = 0, epi = 0, moveCount = 0;
-let nextEnPassant = Array(ePIndex.length), lastCap = Array(captured.length);
+let nextEnPassant = [], lastCap = Array(captured.length);
 for (let i = 0; i < captured.length; i++)
     lastCap[i] = 0;
 let temp = '';
 for (let i = 0; i < ePIndex.length; i++) {
     if (ePIndex[i] === ',') {
-        nextEnPassant[i] = parseInt(temp);
+        nextEnPassant.push(parseInt(temp));
         temp = '';
     } else
         temp += ePIndex[i];
@@ -205,3 +227,6 @@ const prev = document.getElementsByClassName('prev');
 for (button of prev)
     button.addEventListener('click', back);
 console.log(moveHistory);
+console.log(`Playing Black: ${playingBlack}, winner: ${winner}, count: ${count}, en passants: ${ePIndex}, promotions: ${promotions}`);
+console.log(promoMoves);
+console.log(lastCap);
