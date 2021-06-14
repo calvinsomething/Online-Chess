@@ -157,7 +157,7 @@ class GameBoard(models.Model):
         }
         for direction in dirs:
             if dirs[direction]:
-                return self.directions(iKing, playingBlack, direction, checkThreats=True)
+                return self.directions(iKing, playingBlack, direction, checkThreats=True, blocker=piece)
         return [4294967295, 4294967295]
 
 
@@ -291,7 +291,7 @@ class GameBoard(models.Model):
         self.check = True
 
 
-    def directions(self, piece, playingBlack, *args, rng=8, checkThreats=False, attacks=False):
+    def directions(self, piece, playingBlack, *args, rng=8, checkThreats=False, attacks=False, blocker=None):
         legalMoves = [0, 0]
         dirs = {
             'N': (-8, lambda sq : sq > -1, ('Q', 'R')),
@@ -305,7 +305,6 @@ class GameBoard(models.Model):
         }
         checkSquare = lambda direc, dist : piece + direc * dist
         canCapture = lambda inPath : (playingBlack and inPath == inPath.lower()) or (not playingBlack and inPath == inPath.upper())
-        blockers = 0
         for arg in args:
             for sq in range(1, rng):
                 current = checkSquare(dirs[arg][0], sq)
@@ -324,8 +323,8 @@ class GameBoard(models.Model):
                         if attacks:
                             legalMoves = self.toBitset(current, legalMoves)
                         elif checkThreats:
-                            blockers += 1
-                            if blockers < 2: continue
+                            if current == blocker:
+                                continue
                 break
         if checkThreats: return [4294967295, 4294967295]
         return legalMoves
