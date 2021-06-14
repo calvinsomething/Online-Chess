@@ -113,7 +113,7 @@ function move(from, to, fwd = true) {
     var piece = board[row][col];
     if (!fwd && moveCount === nextEnPassant[epi - 1])
         reverseEP(row, col);
-    else if (!fwd && piece.toLowerCase() === 'k' && Math.abs(to - from) > 1)
+    else if (!fwd && piece.toLowerCase() === 'k' && Math.abs(to - from) === 2)
         revCastle(row, col);
     else if (!fwd && moveCount === promoMoves[promoIndex - 1]) {
         piece = row == 0 ? 'p' : 'P';
@@ -139,7 +139,7 @@ function move(from, to, fwd = true) {
             console.log(capIndex);
             lastCap[capIndex++] = moveCount;
         }
-        else if (piece.toLowerCase() === 'k' && Math.abs(to - from) > 1)
+        else if (piece.toLowerCase() === 'k' && Math.abs(to - from) === 2)
             castle(row, col);
     }
     if (fwd && piece.toLowerCase() === 'p' && (row === 0 || row === 7)) {
