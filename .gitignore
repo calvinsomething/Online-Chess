@@ -1,2 +1,13 @@
 notes
 django.env
+db.sqlite3
+chess/api/__pycache__
+chess/api/migrations
+chess/chess/__pycache__
+chess/filters/__pycache__
+chess/filters/migrations
+chess/filters/templatetags
+chess/game_history/__pycache__
+chess/game_history/migrations
+chess/users/__pycache__
+chess/users/migrations

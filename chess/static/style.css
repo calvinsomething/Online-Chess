@@ -134,5 +134,6 @@ margin-left: 4px;
     object-position:-25px 0px; width: 110px;
 }
 
-
-
+#findGame:hover {
+    cursor: pointer;
+}
